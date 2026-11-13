@@ -39,15 +39,9 @@ export function filterCandidates(
     candidates = candidates.filter((item) => item.id !== "sqlite_embedded");
   }
 
-  // 3. Frontend Rule: Eliminate static-only Astro for dynamic SaaS, Realtime, Marketplaces, or Internal tools
-  if (
-    layer === "frontend" &&
-    (scenario.project.type === "realtime_collab" ||
-      scenario.project.type === "saas_b2b" ||
-      scenario.project.type === "internal_tool" ||
-      scenario.project.type === "marketplace" ||
-      scenario.project.type === "fintech")
-  ) {
+  // 3. Frontend Rule: Astro is exclusively for content sites and blogs.
+  // Eliminate Astro for all dynamic web applications, SaaS, and marketplaces in favor of Next.js / React
+  if (layer === "frontend" && scenario.project.type !== "content_site") {
     candidates = candidates.filter((item) => item.id !== "astro");
   }
 
