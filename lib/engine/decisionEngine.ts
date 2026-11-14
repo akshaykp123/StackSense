@@ -81,17 +81,17 @@ export function generateRecommendation(scenario: InputScenario): OutputRecommend
   const dbScored = scoreCandidates(filterCandidates("database", scenario), scenario);
   const hostScored = scoreCandidates(filterCandidates("hosting", scenario), scenario);
 
-  const feWinner = feScored[0].item;
-  const feRunnerUp = feScored[1]?.item || feWinner;
+    const feWinner = feScored[0].item;
+  const feRunnerUp = feScored[1]?.item;
 
   const beWinner = beScored[0].item;
-  const beRunnerUp = beScored[1]?.item || beWinner;
+  const beRunnerUp = beScored[1]?.item;
 
   const dbWinner = dbScored[0].item;
-  const dbRunnerUp = dbScored[1]?.item || dbWinner;
+  const dbRunnerUp = dbScored[1]?.item;
 
   const hostWinner = hostScored[0].item;
-  const hostRunnerUp = hostScored[1]?.item || hostWinner;
+  const hostRunnerUp = hostScored[1]?.item;
 
   // 2. Build Core Components with Justifications and Alternatives (FR5)
   const frontend: Component = {
@@ -102,12 +102,12 @@ export function generateRecommendation(scenario: InputScenario): OutputRecommend
       "team.languages",
       ...(scenario.requirements.seo_critical ? ["requirements.seo_critical"] : []),
     ],
-    alternatives: [
-      {
-        choice: feRunnerUp.name,
-        why_not: `Lower composite score based on team skill affinity and platform constraints for this scenario.`,
-      },
-    ],
+        alternatives: feRunnerUp && feRunnerUp.id !== feWinner.id
+      ? [{
+          choice: feRunnerUp.name,
+          why_not: `Lower composite score based on team skill affinity and platform constraints for this scenario.`,
+        }]
+      : [],
     tradeoffs: feWinner.tradeoffs,
   };
 
@@ -122,14 +122,14 @@ export function generateRecommendation(scenario: InputScenario): OutputRecommend
       "scale.users_12_months",
       ...(scenario.requirements.realtime ? ["requirements.realtime"] : []),
     ],
-    alternatives: [
-      {
-        choice: beRunnerUp.name,
-        why_not: beRunnerUp.requires_devops && !scenario.team.has_devops
-          ? "Requires higher operational and DevOps maturity than available."
-          : "Lower team familiarity and higher setup overhead.",
-      },
-    ],
+        alternatives: beRunnerUp && beRunnerUp.id !== beWinner.id
+      ? [{
+          choice: beRunnerUp.name,
+          why_not: beRunnerUp.requires_devops && !scenario.team.has_devops
+            ? "Requires higher operational and DevOps maturity than available."
+            : "Lower team familiarity and higher setup overhead.",
+        }]
+      : [],
     tradeoffs: beWinner.tradeoffs,
   };
 
@@ -143,12 +143,12 @@ export function generateRecommendation(scenario: InputScenario): OutputRecommend
       ...(scenario.compliance.length > 0 ? ["compliance"] : []),
       ...(scenario.requirements.offline_support ? ["requirements.offline_support"] : []),
     ],
-    alternatives: [
-      {
-        choice: dbRunnerUp.name,
-        why_not: "Less optimal fit for the project's ACID requirements, cost constraints, or offline sync needs.",
-      },
-    ],
+        alternatives: dbRunnerUp && dbRunnerUp.id !== dbWinner.id
+      ? [{
+          choice: dbRunnerUp.name,
+          why_not: "Less optimal fit for the project's ACID requirements, cost constraints, or offline sync needs.",
+        }]
+      : [],
     tradeoffs: dbWinner.tradeoffs,
   };
 
@@ -161,14 +161,14 @@ export function generateRecommendation(scenario: InputScenario): OutputRecommend
       "infrastructure.cloud_preference",
       ...(scenario.infrastructure.data_residency !== "none" ? ["infrastructure.data_residency"] : []),
     ],
-    alternatives: [
-      {
-        choice: hostRunnerUp.name,
-        why_not: hostRunnerUp.min_monthly_cost_usd > scenario.budget.monthly_infra_usd
-          ? "Exceeds designated monthly infrastructure budget."
-          : "Higher maintenance overhead for the current team size.",
-      },
-    ],
+        alternatives: hostRunnerUp && hostRunnerUp.id !== hostWinner.id
+      ? [{
+          choice: hostRunnerUp.name,
+          why_not: hostRunnerUp.min_monthly_cost_usd > scenario.budget.monthly_infra_usd
+            ? "Exceeds designated monthly infrastructure budget."
+            : "Higher maintenance overhead for the current team size.",
+        }]
+      : [],
     tradeoffs: hostWinner.tradeoffs,
   };
 
