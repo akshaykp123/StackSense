@@ -2,20 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { InputScenarioSchema } from "@/lib/schemas/inputSchema";
 import { generateRecommendation } from "@/lib/engine/decisionEngine";
 
-/**
- * POST /api/recommend
- * Accepts an InputScenario JSON, validates it, and returns the OutputRecommendation
- */
 export async function POST(request: NextRequest) {
   try {
-    // 1. Parse the incoming JSON body
     const body = await request.json();
-
-    // 2. Validate input against Zod schema (Section 3 of Problem Statement)
     const validationResult = InputScenarioSchema.safeParse(body);
 
     if (!validationResult.success) {
-      // Return 400 Bad Request with field-level errors
       return NextResponse.json(
         {
           status: "invalid_input",
@@ -29,14 +21,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Execute the 3-Stage Decision Engine
-    const validatedScenario = validationResult.data;
-    const recommendation = generateRecommendation(validatedScenario);
-
-    // 4. Return 200 OK with the Section 4 Output JSON
+    const recommendation = generateRecommendation(validationResult.data);
     return NextResponse.json(recommendation, { status: 200 });
   } catch (error) {
-    console.error("API Error in /api/recommend:", error);
+    console.error("API error in /api/recommend:", error);
     return NextResponse.json(
       {
         status: "error",

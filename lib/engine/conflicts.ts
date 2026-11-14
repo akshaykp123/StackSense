@@ -1,13 +1,11 @@
 import { InputScenario } from "../schemas/inputSchema";
 import { Warning } from "../schemas/outputSchema";
 
-/**
- * Stage 1: Detects contradictory or high-risk constraints (Section 6 Edge Cases)
- */
+// Checks for contradictory or high-risk constraint combinations
 export function detectConflicts(scenario: InputScenario): Warning[] {
   const warnings: Warning[] = [];
 
-  // 1. Contradiction: Zero Budget with High Scale
+  // Zero budget with high scale
   if (scenario.budget.monthly_infra_usd === 0 && scenario.scale.users_12_months > 10000) {
     warnings.push({
       code: "BUDGET_SCALE_MISMATCH",
@@ -17,7 +15,7 @@ export function detectConflicts(scenario: InputScenario): Warning[] {
     });
   }
 
-  // 2. Risk: Solo or Beginner Developer targeting Enterprise Availability (99.99%)
+  // Solo or beginner team aiming for four-nines availability
   if (
     (scenario.team.size === 1 || scenario.team.experience === "beginner") &&
     (scenario.requirements.availability === "99.95" || scenario.requirements.availability === "99.99")
@@ -30,7 +28,7 @@ export function detectConflicts(scenario: InputScenario): Warning[] {
     });
   }
 
-  // 3. Risk: Ultra-aggressive timeline with multiple cross-platform targets
+  // Tight timeline across many platforms
   if (scenario.timeline.mvp_weeks <= 3 && scenario.project.platforms.length >= 3) {
     warnings.push({
       code: "TIMELINE_PLATFORM_OVERLOAD",
@@ -40,7 +38,7 @@ export function detectConflicts(scenario: InputScenario): Warning[] {
     });
   }
 
-  // 4. Compliance: RBI / India Localization without India region
+  // Localisation mandate without matching region
   if (
     scenario.compliance.includes("rbi_localisation") &&
     scenario.infrastructure.data_residency !== "india"
@@ -53,7 +51,7 @@ export function detectConflicts(scenario: InputScenario): Warning[] {
     });
   }
 
-  // 5. DevOps deficit warning
+  // On-premise setup without devops experience
   if (!scenario.team.has_devops && scenario.infrastructure.deployment_model === "on_premise") {
     warnings.push({
       code: "ON_PREMISE_NO_DEVOPS",

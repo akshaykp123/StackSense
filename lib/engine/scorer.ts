@@ -13,23 +13,19 @@ export interface ScoredCandidate {
   };
 }
 
-/**
- * Stage 3: Multi-Factor Utility Scoring (Section 5.1 & 8)
- * Ranks candidates mathematically using weights, team skills, and scale.
- */
 export function scoreCandidates(
   candidates: CatalogItem[],
   scenario: InputScenario
 ): ScoredCandidate[] {
   const scored = candidates.map((item) => {
-    // 1. Priority-Weighted Utility Score
+    // Weighted priority score based on user preference sliders
     const costScore = item.cost_rating * scenario.priorities.cost * 3;
     const scaleScore = item.scalability_rating * scenario.priorities.scalability * 3;
     const ttmScore = item.time_to_market_rating * scenario.priorities.time_to_market * 3;
     const simplicityScore = (11 - item.complexity_rating) * scenario.priorities.maintainability * 2;
     const priorityScore = costScore + scaleScore + ttmScore + simplicityScore;
 
-    // 2. Team Skill Match Bonus (+35 points)
+    // Team language familiarity bonus
     let skillBonus = 0;
     if (scenario.team.languages.length > 0 && item.languages.length > 0) {
       const knowsLanguage = item.languages.some((lang) =>
@@ -40,22 +36,22 @@ export function scoreCandidates(
       }
     }
 
-    // 3. DevOps Penalty (-40 points if team lacks DevOps but tool requires it)
+    // Penalty if tool requires devops but team lacks one
     let devopsPenalty = 0;
     if (!scenario.team.has_devops && item.requires_devops) {
       devopsPenalty = -40;
     }
 
-    // 4. Scale Affinity & Anti-Overengineering Rule
+    // Scale adjustments: favor proven scale, penalize over-engineering for small projects
     let scaleBonus = 0;
     if (scenario.scale.users_12_months >= 100000 && item.scalability_rating >= 9) {
-      scaleBonus += 25; // High-scale reward
+      scaleBonus += 25;
     }
     if (scenario.scale.users_12_months <= 5000 && item.complexity_rating >= 7) {
-      scaleBonus -= 20; // Penalize over-engineering for tiny projects
+      scaleBonus -= 20;
     }
 
-    // 5. Budget Penalty (-50 points if base cost exceeds monthly budget)
+    // Penalty if baseline cost exceeds monthly budget
     let budgetPenalty = 0;
     if (item.min_monthly_cost_usd > scenario.budget.monthly_infra_usd) {
       budgetPenalty = -50;
@@ -76,6 +72,5 @@ export function scoreCandidates(
     };
   });
 
-  // Sort descending by highest score
   return scored.sort((a, b) => b.score - a.score);
 }

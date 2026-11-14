@@ -12,9 +12,6 @@ export * from "./database";
 export * from "./hosting";
 export * from "./supporting";
 
-/**
- * Unified catalog containing all 28 production technologies
- */
 export const TECH_CATALOG: CatalogItem[] = [
   ...FRONTEND_TECHNOLOGIES,
   ...BACKEND_TECHNOLOGIES,

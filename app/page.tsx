@@ -16,7 +16,6 @@ import {
   FileUp,
   DollarSign,
   CheckCircle2,
-  Sparkles,
   ArrowRight,
   RotateCcw,
   Check,
@@ -233,7 +232,6 @@ export default function StackSenseApp() {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   };
 
-  // Synthesize recommendation deterministically
   const handleSynthesize = () => {
     setIsGenerating(true);
     setTimeout(() => {
@@ -325,7 +323,6 @@ export default function StackSenseApp() {
           : "bg-[#f8fafc] text-zinc-900 selection:bg-zinc-200 selection:text-zinc-900"
       }`}
     >
-      {/* Sleek, Modern Top Navigation */}
       <header
         className={`sticky top-0 z-50 border-b backdrop-blur-md transition-colors ${
           isDark
@@ -334,8 +331,6 @@ export default function StackSenseApp() {
         }`}
       >
         <div className="mx-auto flex h-20 max-w-[1560px] items-center justify-between px-6 sm:px-10">
-          
-          {/* Logo & Product Title */}
           <div className="flex items-center gap-3.5">
             <div
               className={`flex h-10 w-10 items-center justify-center rounded-xl border shadow-sm ${
@@ -356,7 +351,7 @@ export default function StackSenseApp() {
               </span>
               <span className={isDark ? "text-zinc-600 font-light text-base" : "text-zinc-300 font-light text-base"}>/</span>
               <span className={`text-xs sm:text-sm font-medium ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>
-                Architecture Synthesizer
+                Architecture Engine
               </span>
             </div>
           </div>
@@ -412,7 +407,7 @@ export default function StackSenseApp() {
               <button
                 onClick={downloadOutputJson}
                 disabled={!recommendation}
-                title={recommendation ? "Export architecture JSON" : "Synthesize architecture to export"}
+                title={recommendation ? "Export architecture JSON" : "Generate recommendation to export"}
                 className={`flex h-9 items-center gap-1.5 rounded-lg border px-3.5 text-xs sm:text-sm font-medium transition-colors ${
                   recommendation
                     ? isDark
@@ -432,14 +427,11 @@ export default function StackSenseApp() {
         </div>
       </header>
 
-      {/* Main Studio Viewport (2 Columns Expanded Horizontally) */}
       <main className="mx-auto max-w-[1560px] px-6 sm:px-10 py-8">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 items-start">
-
-          {/* LEFT COLUMN: Input Configuration Studio (5 Cols) */}
+          {/* Inputs column */}
           <div className="lg:col-span-5 space-y-4">
-            
-            {/* Card 1: Project & Platform Scope */}
+            {/* Project and platforms */}
             <div
               className={`rounded-xl border p-4 sm:p-5 shadow-sm transition-colors ${
                 isDark ? "border-zinc-800/80 bg-zinc-900/40" : "border-zinc-200 bg-white shadow-sm"
@@ -576,7 +568,7 @@ export default function StackSenseApp() {
               </div>
             </div>
 
-            {/* Card 2: Scale & Workload Dynamics */}
+            {/* Scale and workload */}
             <div
               className={`rounded-xl border p-4 sm:p-5 shadow-sm transition-colors ${
                 isDark ? "border-zinc-800/80 bg-zinc-900/40" : "border-zinc-200 bg-white shadow-sm"
@@ -685,7 +677,7 @@ export default function StackSenseApp() {
               </div>
             </div>
 
-            {/* Card 3: Cloud Budget & Team Constraints */}
+            {/* Budget and team */}
             <div
               className={`rounded-xl border p-4 sm:p-5 shadow-sm transition-colors ${
                 isDark ? "border-zinc-800/80 bg-zinc-900/40" : "border-zinc-200 bg-white shadow-sm"
@@ -873,7 +865,7 @@ export default function StackSenseApp() {
               </div>
             </div>
 
-            {/* Card 4: Technical Capabilities */}
+            {/* Technical capabilities */}
             <div
               className={`rounded-xl border p-4 sm:p-5 shadow-sm transition-colors ${
                 isDark ? "border-zinc-800/80 bg-zinc-900/40" : "border-zinc-200 bg-white shadow-sm"
@@ -961,7 +953,7 @@ export default function StackSenseApp() {
               </div>
             </div>
 
-            {/* Synthesize CTA Action */}
+            {/* Submit button */}
             <button
               onClick={handleSynthesize}
               disabled={isGenerating}
@@ -973,25 +965,22 @@ export default function StackSenseApp() {
             >
               {isGenerating ? (
                 <>
-                  <Sparkles className="h-4 w-4 animate-spin" />
-                  <span>Synthesizing Architecture...</span>
+                  <RotateCcw className="h-4 w-4 animate-spin" />
+                  <span>Generating Recommendation...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="h-4 w-4" />
-                  <span>Synthesize Architecture Recommendation</span>
+                  <span>Generate Recommendation</span>
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
             </button>
           </div>
 
-          {/* RIGHT COLUMN: Architectural Blueprint Workspace (7 Cols) */}
+          {/* Results column */}
           <div className="lg:col-span-7">
             {recommendation ? (
               <div className="space-y-4">
-                
-                {/* Executive Architecture Summary Banner */}
                 <div
                   className={`rounded-xl border p-4 sm:p-5 shadow-sm transition-colors ${
                     isDark ? "border-zinc-800 bg-zinc-900/50" : "border-zinc-200 bg-white shadow-sm"
@@ -1056,17 +1045,17 @@ export default function StackSenseApp() {
                   )}
                 </div>
 
-                {/* Blueprint View Navigation Tabs (Eliminates infinite scrolling) */}
+                {/* View tabs */}
                 <div
                   className={`flex rounded-lg border p-1 transition-colors ${
                     isDark ? "border-zinc-800 bg-zinc-900/60" : "border-zinc-200 bg-zinc-100"
                   }`}
                 >
                   {[
-                    { id: "stack", label: "1. Core Stack & Services", icon: Layers },
-                    { id: "diagram", label: "2. System Flowchart", icon: Workflow },
-                    { id: "tradeoffs", label: "3. Trade-offs & Decisions", icon: CheckCircle2 },
-                    { id: "json", label: "4. Specification (JSON)", icon: FileCode },
+                    { id: "stack", label: "Core Stack", icon: Layers },
+                    { id: "diagram", label: "Architecture Flowchart", icon: Workflow },
+                    { id: "tradeoffs", label: "Trade-offs", icon: CheckCircle2 },
+                    { id: "json", label: "JSON Output", icon: FileCode },
                   ].map(({ id, label, icon: Icon }) => (
                     <button
                       key={id}
@@ -1087,7 +1076,7 @@ export default function StackSenseApp() {
                   ))}
                 </div>
 
-                {/* TAB 1: Core Architecture Stack */}
+                {/* Stack tab */}
                 {activeTab === "stack" && (
                   <div className="space-y-3.5">
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -1178,7 +1167,7 @@ export default function StackSenseApp() {
                             isDark ? "text-zinc-400" : "text-zinc-500"
                           }`}
                         >
-                          Decoupled Supporting Micro-Services
+                          Supporting Services
                         </span>
                         <div className="flex flex-wrap gap-2">
                           {recommendation.stack.supporting.map((s, idx) => (
@@ -1215,7 +1204,7 @@ export default function StackSenseApp() {
                   </div>
                 )}
 
-                {/* TAB 3: Architectural Trade-offs & Decisions */}
+                {/* Trade-offs tab */}
                 {activeTab === "tradeoffs" && (
                   <div
                     className={`rounded-xl border p-5 space-y-4 ${
@@ -1297,7 +1286,7 @@ export default function StackSenseApp() {
                   </div>
                 )}
 
-                {/* TAB 4: Raw JSON Specification */}
+                {/* JSON tab */}
                 {activeTab === "json" && (
                   <div
                     className={`rounded-xl border p-4 ${
@@ -1331,7 +1320,7 @@ export default function StackSenseApp() {
                 )}
               </div>
             ) : (
-              /* High-End Minimalist Empty State (Compact & Positioned at Eye-Level) */
+              /* Empty state */
               <div
                 className={`flex min-h-[520px] flex-col items-center justify-center rounded-xl border border-dashed p-8 text-center transition-colors ${
                   isDark
@@ -1356,12 +1345,12 @@ export default function StackSenseApp() {
                 <p className={`mt-1.5 max-w-sm text-xs sm:text-sm leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
                   Configure your product scope and engineering constraints on the left, then click{" "}
                   <span className={`font-medium ${isDark ? "text-zinc-200" : "text-zinc-900"}`}>
-                    Synthesize Architecture Recommendation
+                    Generate Recommendation
                   </span>{" "}
-                  to generate a verified technical stack and system flowchart.
+                  to generate a technical stack recommendation and architecture diagram.
                 </p>
 
-                {/* Quick-Start Cards (Fintech and SaaS inside empty canvas only) */}
+                {/* Preset templates */}
                 <div className="mt-6 w-full max-w-sm space-y-2 text-left">
                   <span
                     className={`text-[10px] sm:text-xs font-semibold uppercase tracking-wider block text-center ${
@@ -1410,7 +1399,6 @@ export default function StackSenseApp() {
                   </button>
                 </div>
 
-                {/* Engine Guarantees */}
                 <div className="mt-8 flex flex-wrap justify-center items-center gap-4 text-xs text-zinc-500 font-mono">
                   <div className="flex items-center gap-1.5">
                     <Check className="h-3.5 w-3.5 text-emerald-500" />

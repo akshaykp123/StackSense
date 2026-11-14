@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "StackSense — Intelligent Software Architecture Synthesizer",
-  description: "Autonomous tech stack recommendation and deterministic system architecture design engine.",
+  title: "StackSense — Tech Stack & Architecture Engine",
+  description: "Deterministic software architecture and tech stack recommendation engine.",
 };
 
 export default function RootLayout({

@@ -1,10 +1,7 @@
 import { InputScenario } from "../schemas/inputSchema";
 import { TECH_CATALOG, CatalogItem } from "../catalog";
 
-/**
- * Stage 2: Hard Deterministic Constraint Filter (Section 5.3)
- * Prunes unfeasible technologies before scoring begins.
- */
+// Prunes unfeasible candidates before scoring
 export function filterCandidates(
   layer: "frontend" | "backend" | "database" | "hosting",
   scenario: InputScenario
@@ -19,18 +16,16 @@ export function filterCandidates(
     scenario.requirements.payments ||
     scenario.requirements.realtime;
 
-  // 1. Backend Rule: Eliminate "None" for dynamic apps
+  // Drop static fallbacks for dynamic projects
   if (layer === "backend" && isDynamicApp) {
     candidates = candidates.filter((item) => item.id !== "backend_none");
   }
 
-  // 2. Database Rule: Eliminate "None" for dynamic apps
   if (layer === "database" && isDynamicApp) {
     candidates = candidates.filter((item) => item.id !== "database_none");
   }
 
-  // 2b. Centralized Multi-User Database Rule:
-  // Embedded SQLite is only for offline mobile or single-user environments; eliminate for multi-user server databases
+  // SQLite is for local/offline mobile, not multi-user server databases
   if (
     layer === "database" &&
     !scenario.requirements.offline_support &&
@@ -39,13 +34,12 @@ export function filterCandidates(
     candidates = candidates.filter((item) => item.id !== "sqlite_embedded");
   }
 
-  // 3. Frontend Rule: Astro is exclusively for content sites and blogs.
-  // Eliminate Astro for all dynamic web applications, SaaS, and marketplaces in favor of Next.js / React
+  // Astro is reserved for content sites
   if (layer === "frontend" && scenario.project.type !== "content_site") {
     candidates = candidates.filter((item) => item.id !== "astro");
   }
 
-  // 4. Platform Hard Filter (Frontend Layer)
+  // Match requested target platforms
   if (layer === "frontend") {
     const requestedPlatforms = scenario.project.platforms;
     const needsMobile = requestedPlatforms.includes("android") || requestedPlatforms.includes("ios");
@@ -63,7 +57,7 @@ export function filterCandidates(
     }
   }
 
-  // 5. Offline Support Hard Filter (Frontend & Database)
+  // Offline support requirement
   if (scenario.requirements.offline_support) {
     if (layer === "frontend" || layer === "database") {
       const offlineCapable = candidates.filter((item) => item.supports_offline);
@@ -73,7 +67,7 @@ export function filterCandidates(
     }
   }
 
-  // 6. Deployment Model Hard Filter (On-Premise / Air-Gapped)
+  // Air-gapped / on-premise requirement
   if (
     scenario.infrastructure.deployment_model === "on_premise" ||
     scenario.infrastructure.deployment_model === "air_gapped"
@@ -83,7 +77,7 @@ export function filterCandidates(
     );
   }
 
-  // 7. Data Residency Hard Filter (India / EU / US)
+  // Data residency constraints
   if (scenario.infrastructure.data_residency !== "none") {
     candidates = candidates.filter(
       (item) =>
@@ -92,7 +86,7 @@ export function filterCandidates(
     );
   }
 
-  // 8. Strict ACID Filter (Database Layer)
+  // Strict ACID needed for fintech, multi-tenant or regulated apps
   if (layer === "database") {
     const needsStrictAcid =
       scenario.project.type === "fintech" ||
@@ -105,12 +99,12 @@ export function filterCandidates(
     }
   }
 
-  // 9. SEO-Critical Filter (Frontend Layer)
+  // SPA without SSR is poor for SEO-critical sites
   if (layer === "frontend" && scenario.requirements.seo_critical) {
     candidates = candidates.filter((item) => item.id !== "react_spa");
   }
 
-  // 10. High-Scale Enterprise Hosting Filter
+  // Fargate for high-budget localized workloads
   if (layer === "hosting") {
     if (scenario.compliance.includes("rbi_localisation") && scenario.budget.monthly_infra_usd > 1000) {
       const enterpriseHosts = candidates.filter((item) => item.id === "aws_ecs_fargate");
@@ -118,7 +112,7 @@ export function filterCandidates(
     }
   }
 
-  // 11. Zero-Budget Filter
+  // Free tier only on zero budget
   if (scenario.budget.monthly_infra_usd === 0) {
     const freeTierItems = candidates.filter((item) => item.min_monthly_cost_usd === 0);
     if (freeTierItems.length > 0) {
@@ -126,7 +120,7 @@ export function filterCandidates(
     }
   }
 
-  // Graceful fallback: never return an empty list
+  // Fallback so we never return an empty list
   return candidates.length > 0
     ? candidates
     : TECH_CATALOG.filter((item) => item.layer === layer);

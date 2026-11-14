@@ -1,6 +1,5 @@
-import {z} from "zod";
+import { z } from "zod";
 
-// 1. Allowed Project Types
 export const ProjectTypeEnum = z.enum([
     "content_site",
     "web_app",
@@ -20,17 +19,13 @@ export const ProjectTypeEnum = z.enum([
     "other",
 ]);
 
-// 2. Target Platforms
 export const PlatformEnum = z.enum(["web", "android", "ios", "desktop", "api_only"]);
 
-// 3. Traffic Pattern & Workload Profile
 export const TrafficPatternEnum = z.enum(["steady", "spiky", "seasonal"]);
 export const WorkloadEnum = z.enum(["read_heavy", "balanced", "write_heavy"]);
 
-// 4. Team Experience Level
 export const ExperienceLevelEnum = z.enum(["beginner", "intermediate", "senior", "mixed"]);
 
-// 5. Infrastructure Constraints
 export const CloudPreferenceEnum = z.enum(["any", "aws", "gcp", "azure", "none"]);
 export const DeploymentModelEnum = z.enum([
   "managed_cloud",
@@ -40,7 +35,6 @@ export const DeploymentModelEnum = z.enum([
 ]);
 export const DataResidencyEnum = z.enum(["none", "india", "eu", "us", "other"]);
 
-// 6. Specialized Requirements
 export const AuthTypeEnum = z.enum([
   "none",
   "email_password",
@@ -51,7 +45,6 @@ export const AuthTypeEnum = z.enum([
 export const MLFeaturesEnum = z.enum(["none", "inference_api", "llm_rag", "training"]);
 export const AvailabilityEnum = z.enum(["99", "99.9", "99.95", "99.99"]);
 
-// 7. Regulatory & Compliance Standards
 export const ComplianceEnum = z.enum([
   "gdpr",
   "dpdp",
@@ -62,7 +55,6 @@ export const ComplianceEnum = z.enum([
   "iso27001",
 ]);
 
-// 8. Project Priorities (1 to 5 scale, default 3)
 export const PrioritySchema = z.object({
   cost: z.number().int().min(1).max(5).default(3),
   time_to_market: z.number().int().min(1).max(5).default(3),
@@ -79,7 +71,6 @@ export const PrioritySchema = z.object({
   security: 3,
 });
 
-// 9. Main Input Scenario Schema
 export const InputScenarioSchema = z.object({
   scenario_id: z.string().optional(),
 
@@ -156,7 +147,6 @@ export const InputScenarioSchema = z.object({
   priorities: PrioritySchema,
 });
 
-// Infer TypeScript type automatically from the schema
 export type InputScenario = z.infer<typeof InputScenarioSchema>;
 
 

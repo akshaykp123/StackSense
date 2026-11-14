@@ -18,9 +18,6 @@ export * from "./scorer";
 export * from "./supporting";
 export * from "./diagram";
 
-/**
- * Determines the architectural pattern (Section 4)
- */
 function determineArchitectureStyle(
   scenario: InputScenario,
   backendId: string,
@@ -33,9 +30,6 @@ function determineArchitectureStyle(
   return "monolith";
 }
 
-/**
- * Calculates order-of-magnitude monthly cost in USD (FR6)
- */
 function calculateCostBand(
   scenario: InputScenario,
   chosenItems: CatalogItem[]
@@ -68,20 +62,15 @@ function calculateCostBand(
   };
 }
 
-/**
- * Master Recommendation Engine (Section 2, 4, 5)
- * Pure deterministic pipeline converting InputScenario -> OutputRecommendation
- */
 export function generateRecommendation(scenario: InputScenario): OutputRecommendation {
   const warnings = detectConflicts(scenario);
 
-  // 1. Solve Core Layers (Frontend, Backend, Database, Hosting)
   const feScored = scoreCandidates(filterCandidates("frontend", scenario), scenario);
   const beScored = scoreCandidates(filterCandidates("backend", scenario), scenario);
   const dbScored = scoreCandidates(filterCandidates("database", scenario), scenario);
   const hostScored = scoreCandidates(filterCandidates("hosting", scenario), scenario);
 
-    const feWinner = feScored[0].item;
+  const feWinner = feScored[0].item;
   const feRunnerUp = feScored[1]?.item;
 
   const beWinner = beScored[0].item;
@@ -93,7 +82,6 @@ export function generateRecommendation(scenario: InputScenario): OutputRecommend
   const hostWinner = hostScored[0].item;
   const hostRunnerUp = hostScored[1]?.item;
 
-  // 2. Build Core Components with Justifications and Alternatives (FR5)
   const frontend: Component = {
     choice: feWinner.name,
     justification: `${feWinner.name} provides the strongest balance of productivity and platform support for ${scenario.project.platforms.join("/")} with ${scenario.team.experience} developers.`,
@@ -172,17 +160,12 @@ export function generateRecommendation(scenario: InputScenario): OutputRecommend
     tradeoffs: hostWinner.tradeoffs,
   };
 
-  // 3. Select Supporting Services (FR4)
   const supporting = selectSupportingServices(scenario);
-
-  // 4. Determine Architecture Style & Costs
   const architectureStyle = determineArchitectureStyle(scenario, beWinner.id, hostWinner.id);
   const costBand = calculateCostBand(scenario, [feWinner, beWinner, dbWinner, hostWinner]);
 
-  // 5. Build Summary
   const summary = `${architectureStyle.replace("_", " ").toUpperCase()} architecture optimized for ${scenario.scale.users_12_months.toLocaleString()} users, prioritizing ${scenario.priorities.cost >= 4 ? "cost efficiency" : "scalability"} and rapid time-to-market.`;
 
-  // 6. Generate Mermaid Flowchart Syntax
   const mermaidDiagram = generateMermaidDiagram(
     feWinner.name,
     beWinner.name,
@@ -191,7 +174,6 @@ export function generateRecommendation(scenario: InputScenario): OutputRecommend
     supporting
   );
 
-  // 7. Status Resolution
   const hasCritical = warnings.some((w) => w.severity === "critical");
   const status = hasCritical ? "ok_with_warnings" : "ok";
 

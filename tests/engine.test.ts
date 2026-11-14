@@ -3,10 +3,9 @@ import { generateRecommendation } from "../lib/engine/decisionEngine";
 import { InputScenario } from "../lib/schemas/inputSchema";
 import { PUBLIC_PRESETS } from "../lib/presets";
 
-describe("StackSense Deterministic Engine Test Suite", () => {
-  // 1. DETERMINISM TEST (LLM-off Rule)
-  it("MUST produce 100% identical output across 50 consecutive runs (Zero Hallucination)", () => {
-    const baseScenario = PUBLIC_PRESETS[3].scenario; // P4 (QuickCredit)
+describe("recommendation engine", () => {
+  it("produces identical output across 50 consecutive runs", () => {
+    const baseScenario = PUBLIC_PRESETS[3].scenario;
     const firstRun = JSON.stringify(generateRecommendation(baseScenario));
 
     for (let i = 0; i < 50; i++) {
@@ -15,8 +14,7 @@ describe("StackSense Deterministic Engine Test Suite", () => {
     }
   });
 
-  // 2. HARD CONSTRAINT: Banking / Fintech Strict ACID Compliance
-  it("Fintech domain must enforce ACID compliance and eliminate non-ACID databases", () => {
+  it("enforces ACID database for fintech", () => {
     const fintechScenario: InputScenario = {
       scenario_id: "TEST_FINTECH",
       project: {
@@ -72,15 +70,12 @@ describe("StackSense Deterministic Engine Test Suite", () => {
     };
 
     const recommendation = generateRecommendation(fintechScenario);
-    
-    // Database must be strictly relational/ACID (PostgreSQL or CockroachDB)
     expect(["PostgreSQL", "CockroachDB"]).toContain(recommendation.stack.database.choice);
     expect(recommendation.stack.database.choice).not.toBe("MongoDB");
     expect(recommendation.stack.database.choice).not.toBe("None");
   });
 
-  // 3. HARD CONSTRAINT: Air-Gapped / Isolated Deployment
-  it("Air-gapped deployment must prune all cloud SaaS (Vercel/Fargate) and pick on-premise Docker", () => {
+  it("selects on-premise docker for air-gapped deployment", () => {
     const airGappedScenario: InputScenario = {
       scenario_id: "TEST_AIR_GAPPED",
       project: {
@@ -136,35 +131,29 @@ describe("StackSense Deterministic Engine Test Suite", () => {
     };
 
     const recommendation = generateRecommendation(airGappedScenario);
-    
-    // Hosting must be on-premise Docker, rejecting cloud PaaS
     expect(recommendation.stack.hosting.choice).toBe("Docker on Linux VM (Self-Hosted / On-Premise)");
     expect(recommendation.stack.hosting.choice).not.toBe("Vercel");
     expect(recommendation.stack.hosting.choice).not.toBe("AWS ECS Fargate");
   });
 
-  // 4. CONFLICT DETECTION: $0 Budget vs High Scale
-  it("High-scale workload with $0 budget must trigger an architectural conflict warning", () => {
+  it("flags warning for high scale with zero budget", () => {
     const impossibleScenario: InputScenario = {
-      ...PUBLIC_PRESETS[0].scenario, // Starts from DevFolio ($0 budget)
+      ...PUBLIC_PRESETS[0].scenario,
       scale: {
         ...PUBLIC_PRESETS[0].scenario.scale,
-        users_12_months: 300000, // 300k users on $0 budget
+        users_12_months: 300000,
         workload: "write_heavy",
       },
     };
 
     const recommendation = generateRecommendation(impossibleScenario);
-    
-    // Status must flag a warning or conflict
     const hasBudgetWarning = recommendation.warnings.some(
       (w) => w.code === "BUDGET_SCALE_MISMATCH" || w.code === "BUDGET_OVERRUN_RISK"
     );
     expect(hasBudgetWarning).toBe(true);
   });
 
-  // 5. SOLO DEVELOPER CONSTRAINT: Low DevOps overhead
-  it("Solo beginner developer must not be assigned distributed Kubernetes or complex Fargate", () => {
+  it("avoids microservices and fargate for solo beginner", () => {
     const soloScenario: InputScenario = {
       ...PUBLIC_PRESETS[0].scenario,
       team: {
@@ -177,14 +166,11 @@ describe("StackSense Deterministic Engine Test Suite", () => {
     };
 
     const recommendation = generateRecommendation(soloScenario);
-    
-    // Should choose managed PaaS, rejecting complex microservices infrastructure
     expect(recommendation.stack.hosting.choice).not.toBe("AWS ECS Fargate");
     expect(recommendation.architecture_style).not.toBe("microservices");
   });
 
-  // 6. BENCHMARK SCENARIO VERIFICATION: P1 to P6
-  it("All 6 benchmark scenarios execute successfully with valid schema outputs", () => {
+  it("generates valid recommendations for all presets", () => {
     PUBLIC_PRESETS.forEach((preset) => {
       const rec = generateRecommendation(preset.scenario);
       

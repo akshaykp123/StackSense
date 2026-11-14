@@ -2,14 +2,11 @@ import { InputScenario } from "../schemas/inputSchema";
 import { SupportingComponent } from "../schemas/outputSchema";
 import { TECH_CATALOG } from "../catalog";
 
-/**
- * Stage 4: Supporting Services Selector (FR4)
- * Adds specialized services based on exact requirements.
- */
+// Selects add-on services based on specific requirements
 export function selectSupportingServices(scenario: InputScenario): SupportingComponent[] {
   const supporting: SupportingComponent[] = [];
 
-  // 1. File & Media Storage
+  // File and media storage
   if (scenario.requirements.file_media_storage) {
     const s3 = TECH_CATALOG.find((t) => t.id === "aws_s3_storage");
     if (s3) {
@@ -24,7 +21,7 @@ export function selectSupportingServices(scenario: InputScenario): SupportingCom
     }
   }
 
-  // 2. In-Memory Cache / Realtime PubSub
+  // Caching and pub/sub
   const needsCache =
     scenario.requirements.realtime ||
     scenario.scale.traffic_pattern === "spiky" ||
@@ -48,7 +45,7 @@ export function selectSupportingServices(scenario: InputScenario): SupportingCom
     }
   }
 
-  // 3. Message Queue / Event Streaming
+  // Queue and event streaming
   const needsQueue =
     scenario.requirements.payments ||
     scenario.scale.users_12_months >= 100000 ||
@@ -71,7 +68,7 @@ export function selectSupportingServices(scenario: InputScenario): SupportingCom
     }
   }
 
-  // 4. Full-Text Search Engine
+  // Full-text search
   if (scenario.requirements.full_text_search) {
     const search = TECH_CATALOG.find((t) => t.id === "meilisearch");
     if (search) {
@@ -86,7 +83,7 @@ export function selectSupportingServices(scenario: InputScenario): SupportingCom
     }
   }
 
-  // 5. Authentication Service
+  // Auth service
   if (scenario.requirements.auth === "phone_otp") {
     const auth = TECH_CATALOG.find((t) => t.id === "firebase_phone_auth");
     if (auth) {
@@ -101,7 +98,7 @@ export function selectSupportingServices(scenario: InputScenario): SupportingCom
     }
   }
 
-  // 6. Payments Infrastructure
+  // Payments gateway
   if (scenario.requirements.payments) {
     const payments = TECH_CATALOG.find((t) => t.id === "razorpay_gateway");
     if (payments) {

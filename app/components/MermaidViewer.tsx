@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import mermaid from "mermaid";
-import { Copy, Check, Sparkles } from "lucide-react";
+import { Copy, Check, Workflow } from "lucide-react";
 
 interface MermaidViewerProps {
   chart: string;
@@ -91,13 +91,13 @@ export default function MermaidViewer({ chart, isDark = true }: MermaidViewerPro
         }`}
       >
         <div className="flex items-center gap-2">
-          <Sparkles className={`h-3.5 w-3.5 ${isDark ? "text-zinc-400" : "text-zinc-500"}`} />
+          <Workflow className={`h-3.5 w-3.5 ${isDark ? "text-zinc-400" : "text-zinc-500"}`} />
           <span
             className={`text-xs font-semibold tracking-wide uppercase ${
               isDark ? "text-zinc-200" : "text-zinc-800"
             }`}
           >
-            System Topology Flowchart
+            Architecture Flowchart
           </span>
         </div>
         <button
@@ -132,7 +132,7 @@ export default function MermaidViewer({ chart, isDark = true }: MermaidViewerPro
             dangerouslySetInnerHTML={{ __html: svgContent }}
           />
         ) : (
-          <div className="text-xs text-zinc-500 animate-pulse">Synthesizing system flowchart...</div>
+          <div className="text-xs text-zinc-500 animate-pulse">Loading diagram...</div>
         )}
       </div>
     </div>
