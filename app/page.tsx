@@ -240,18 +240,6 @@ export default function StackSenseApp() {
   const handleSelectPreset = (preset: PresetItem) => {
     setSelectedPresetId(preset.id);
     setScenario(preset.scenario);
-    setIsGenerating(true);
-    setTimeout(() => {
-      try {
-        const result = generateRecommendation(preset.scenario);
-        setRecommendation(result);
-        setActiveTab("stack");
-      } catch (err) {
-        console.error("Decision engine failed:", err);
-      } finally {
-        setIsGenerating(false);
-      }
-    }, 120);
   };
 
   const handleSynthesize = () => {
@@ -1017,36 +1005,11 @@ export default function StackSenseApp() {
           <div className="lg:col-span-7">
             {recommendation ? (
               <div className="space-y-4">
-                {/* Results Header with 2 Showcase Demos */}
+                {/* Results Header */}
                 <div className="flex items-center justify-between px-1">
                   <span className={`text-xs font-semibold uppercase tracking-wider ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>
                     Architecture Synthesis
                   </span>
-                  <div className="flex items-center gap-2">
-                    <span className={`text-[11px] font-medium ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>
-                      Demos:
-                    </span>
-                    {DEMO_PRESETS.map((p) => {
-                      const isSelected = selectedPresetId === p.id || scenario.scenario_id === p.id;
-                      return (
-                        <button
-                          key={p.id}
-                          onClick={() => handleSelectPreset(p)}
-                          className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition-all ${
-                            isSelected
-                              ? isDark
-                                ? "border-blue-500 bg-blue-950/70 text-blue-300 font-semibold shadow-xs"
-                                : "border-blue-500 bg-blue-50 text-blue-900 font-semibold shadow-xs"
-                              : isDark
-                                ? "border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"
-                                : "border-zinc-200 bg-white text-zinc-600 hover:text-zinc-900 hover:border-zinc-300 shadow-xs"
-                          }`}
-                        >
-                          {p.name}
-                        </button>
-                      );
-                    })}
-                  </div>
                 </div>
 
                 <div
