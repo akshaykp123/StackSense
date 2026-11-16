@@ -98,6 +98,27 @@ export function selectSupportingServices(scenario: InputScenario): SupportingCom
     }
   }
 
+  // Enterprise SSO Auth
+  const hasEntraId = scenario.infrastructure.existing_systems?.some((s) =>
+    s.toLowerCase().includes("entra") || s.toLowerCase().includes("azure ad")
+  );
+  if (scenario.requirements.auth === "enterprise_sso" || hasEntraId) {
+    const entra = TECH_CATALOG.find((t) => t.id === "microsoft_entra_id");
+    if (entra) {
+      supporting.push({
+        layer: "auth",
+        choice: entra.name,
+        justification: "Direct integration with Microsoft Entra ID (Azure AD) enables seamless single sign-on (SSO), corporate directory sync, and enterprise role-based access control.",
+        driven_by: [
+          "requirements.auth",
+          ...(hasEntraId ? ["infrastructure.existing_systems"] : []),
+        ],
+        alternatives: [{ choice: "Custom OAuth2 / JWT Server", why_not: "Duplicates existing corporate Active Directory and requires manual identity management" }],
+        tradeoffs: entra.tradeoffs,
+      });
+    }
+  }
+
   // Payments gateway
   if (scenario.requirements.payments) {
     const payments = TECH_CATALOG.find((t) => t.id === "razorpay_gateway");

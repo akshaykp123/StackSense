@@ -58,30 +58,32 @@ export const ValidationErrorSchema = z.object({
   message: z.string(),
 });
 
+export const OutputStackSchema = z.object({
+  frontend: ComponentSchema,
+  backend: ComponentSchema,
+  database: ComponentSchema,
+  hosting: ComponentSchema,
+  supporting: z.array(SupportingComponentSchema).default([]),
+});
+
+export type OutputStack = z.infer<typeof OutputStackSchema>;
+
 export const OutputRecommendationSchema = z.object({
   scenario_id: z.string().optional(),
   engine_version: z.string().default("1.0.0"),
   status: EngineStatusEnum,
   summary: z.string(),
   architecture_style: ArchitectureStyleEnum,
-  
-  stack: z.object({
-    frontend: ComponentSchema,
-    backend: ComponentSchema,
-    database: ComponentSchema,
-    hosting: ComponentSchema,
-    supporting: z.array(SupportingComponentSchema).default([]),
-  }),
-
+  stack: OutputStackSchema.nullable(),
   estimated_monthly_cost_usd: EstimatedMonthlyCostSchema,
   warnings: z.array(WarningSchema).default([]),
   assumptions: z.array(z.string()).default([]),
   validation_errors: z.array(ValidationErrorSchema).default([]),
-
   mermaid_diagram: z.string().optional(),
 });
 
 export type OutputRecommendation = z.infer<typeof OutputRecommendationSchema>;
+export type ValidOutputRecommendation = Omit<OutputRecommendation, "stack"> & { stack: OutputStack };
 export type Component = z.infer<typeof ComponentSchema>;
 export type SupportingComponent = z.infer<typeof SupportingComponentSchema>;
 export type Warning = z.infer<typeof WarningSchema>;

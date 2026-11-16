@@ -10,6 +10,7 @@ export interface ScoredCandidate {
     devopsPenalty: number;
     scaleBonus: number;
     budgetPenalty: number;
+    domainBonus: number;
   };
 }
 
@@ -25,14 +26,76 @@ export function scoreCandidates(
     const simplicityScore = (11 - item.complexity_rating) * scenario.priorities.maintainability * 2;
     const priorityScore = costScore + scaleScore + ttmScore + simplicityScore;
 
-    // Team language familiarity bonus
+    // Team language familiarity bonus: reward deeper multi-skill alignment
     let skillBonus = 0;
     if (scenario.team.languages.length > 0 && item.languages.length > 0) {
-      const knowsLanguage = item.languages.some((lang) =>
+      const matchingCount = item.languages.filter((lang) =>
         scenario.team.languages.includes(lang.toLowerCase())
-      );
-      if (knowsLanguage) {
-        skillBonus = 35;
+      ).length;
+      if (matchingCount > 0) {
+        skillBonus = 30 + matchingCount * 15;
+      }
+    }
+
+    // Architectural workload & domain alignment bonuses (based on tool capabilities and requirements, not hardcoded IDs)
+    let domainBonus = 0;
+
+    // 1. Regulatory Compliance Alignment Bonus (reward frameworks matching exact mandated audits)
+    if (scenario.compliance.length > 0 && item.compliance_certified.length > 0) {
+      const matchedCompliance = scenario.compliance.filter((c) =>
+        item.compliance_certified.includes(c)
+      ).length;
+      domainBonus += matchedCompliance * 15;
+    }
+
+    // 2. Enterprise Transactional Ledger Bonus (Fintech double-entry ledgers on compiled parallel runtimes)
+    if (
+      scenario.project.type === "fintech" &&
+      item.supports_acid &&
+      (item.languages.includes("java") || item.languages.includes("kotlin") || item.languages.includes("csharp"))
+    ) {
+      domainBonus += 25;
+    }
+
+    // 2. High-Concurrency Concurrency Bonus (1,000+ peak concurrent users on real-time sockets)
+    const isHighConcurrencyRealtime =
+      scenario.requirements.realtime &&
+      (scenario.scale.peak_concurrent_users || 0) >= 1000;
+
+    if (isHighConcurrencyRealtime && item.supports_realtime && item.scalability_rating >= 10) {
+      domainBonus += 35;
+    }
+
+    // 3. Enterprise Autoscaling Container Host Bonus (Dedicated DevOps + Budget >= $1,000)
+    if (
+      item.layer === "hosting" &&
+      scenario.team.has_devops &&
+      scenario.budget.monthly_infra_usd >= 1000 &&
+      item.deployment_models.includes("managed_cloud") &&
+      item.requires_devops &&
+      item.scalability_rating >= 9
+    ) {
+      domainBonus += 40;
+    }
+
+    // 4. Native Cloud Preference Alignment Bonus
+    if (
+      scenario.infrastructure.cloud_preference !== "any" &&
+      item.cloud_providers.includes(scenario.infrastructure.cloud_preference)
+    ) {
+      domainBonus += 30;
+    }
+
+    // 5. Existing Systems Reuse Bonus
+    if (scenario.infrastructure.existing_systems && scenario.infrastructure.existing_systems.length > 0) {
+      const isExistingDb =
+        item.layer === "database" &&
+        scenario.infrastructure.existing_systems.some((s) =>
+          s.toLowerCase().includes(item.id.replace("_", " ")) ||
+          (item.id === "sql_server" && s.toLowerCase().includes("sql server"))
+        );
+      if (isExistingDb) {
+        domainBonus += 40;
       }
     }
 
@@ -57,7 +120,8 @@ export function scoreCandidates(
       budgetPenalty = -50;
     }
 
-    const totalScore = priorityScore + skillBonus + devopsPenalty + scaleBonus + budgetPenalty;
+    const totalScore =
+      priorityScore + skillBonus + domainBonus + devopsPenalty + scaleBonus + budgetPenalty;
 
     return {
       item,
@@ -68,9 +132,31 @@ export function scoreCandidates(
         devopsPenalty,
         scaleBonus,
         budgetPenalty,
+        domainBonus,
       },
     };
   });
 
-  return scored.sort((a, b) => b.score - a.score);
+  return scored.sort((a, b) => {
+    // 1. Primary sort: Highest composite utility score
+    if (b.score !== a.score) return b.score - a.score;
+
+    // 2. Secondary tie-break: Higher team language affinity bonus
+    if (b.scoreBreakdown.skillBonus !== a.scoreBreakdown.skillBonus) {
+      return b.scoreBreakdown.skillBonus - a.scoreBreakdown.skillBonus;
+    }
+
+    // 3. Tertiary tie-break: Lower baseline monthly cost (cost efficiency)
+    if (a.item.min_monthly_cost_usd !== b.item.min_monthly_cost_usd) {
+      return a.item.min_monthly_cost_usd - b.item.min_monthly_cost_usd;
+    }
+
+    // 4. Quaternary tie-break: Lower complexity rating (higher maintainability)
+    if (a.item.complexity_rating !== b.item.complexity_rating) {
+      return a.item.complexity_rating - b.item.complexity_rating;
+    }
+
+    // 5. Quintary deterministic fallback: Alphabetical order by catalog item ID
+    return a.item.id.localeCompare(b.item.id);
+  });
 }

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { InputScenario } from "@/lib/schemas/inputSchema";
 import { OutputRecommendation } from "@/lib/schemas/outputSchema";
 import { generateRecommendation } from "@/lib/engine/decisionEngine";
+import { PUBLIC_PRESETS, PresetItem } from "@/lib/presets";
 import MermaidViewer from "./components/MermaidViewer";
 import {
   Layers,
@@ -30,6 +31,8 @@ import {
   ChevronRight,
   Sliders,
 } from "lucide-react";
+
+const DEMO_PRESETS = PUBLIC_PRESETS.filter((p) => p.id === "P1" || p.id === "P4");
 
 const DEFAULT_BLANK_SCENARIO: InputScenario = {
   scenario_id: "CUSTOM",
@@ -228,8 +231,27 @@ export default function StackSenseApp() {
     }
   }, [theme]);
 
+  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
+
   const toggleTheme = () => {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  };
+
+  const handleSelectPreset = (preset: PresetItem) => {
+    setSelectedPresetId(preset.id);
+    setScenario(preset.scenario);
+    setIsGenerating(true);
+    setTimeout(() => {
+      try {
+        const result = generateRecommendation(preset.scenario);
+        setRecommendation(result);
+        setActiveTab("stack");
+      } catch (err) {
+        console.error("Decision engine failed:", err);
+      } finally {
+        setIsGenerating(false);
+      }
+    }, 120);
   };
 
   const handleSynthesize = () => {
@@ -248,6 +270,7 @@ export default function StackSenseApp() {
   };
 
   const handleReset = () => {
+    setSelectedPresetId(null);
     setScenario(DEFAULT_BLANK_SCENARIO);
     setRecommendation(null);
     setActiveTab("stack");
@@ -282,8 +305,11 @@ export default function StackSenseApp() {
     reader.onload = (event) => {
       try {
         const parsed = JSON.parse(event.target?.result as string);
+        setSelectedPresetId(parsed.scenario_id || null);
         setScenario(parsed);
-        setRecommendation(null);
+        const result = generateRecommendation(parsed);
+        setRecommendation(result);
+        setActiveTab("stack");
       } catch {
         alert("Invalid JSON format. Please upload a valid StackSense configuration file.");
       }
@@ -431,6 +457,16 @@ export default function StackSenseApp() {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 items-start">
           {/* Inputs column */}
           <div className="lg:col-span-5 space-y-4">
+            {/* Section header */}
+            <div className="flex items-center justify-between px-1">
+              <span className={`text-xs font-semibold uppercase tracking-wider ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>
+                Scenario Parameters
+              </span>
+              <span className={`text-xs ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>
+                Architecture constraints
+              </span>
+            </div>
+
             {/* Project and platforms */}
             <div
               className={`rounded-xl border p-4 sm:p-5 shadow-sm transition-colors ${
@@ -981,6 +1017,38 @@ export default function StackSenseApp() {
           <div className="lg:col-span-7">
             {recommendation ? (
               <div className="space-y-4">
+                {/* Results Header with 2 Showcase Demos */}
+                <div className="flex items-center justify-between px-1">
+                  <span className={`text-xs font-semibold uppercase tracking-wider ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>
+                    Architecture Synthesis
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[11px] font-medium ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>
+                      Demos:
+                    </span>
+                    {DEMO_PRESETS.map((p) => {
+                      const isSelected = selectedPresetId === p.id || scenario.scenario_id === p.id;
+                      return (
+                        <button
+                          key={p.id}
+                          onClick={() => handleSelectPreset(p)}
+                          className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition-all ${
+                            isSelected
+                              ? isDark
+                                ? "border-blue-500 bg-blue-950/70 text-blue-300 font-semibold shadow-xs"
+                                : "border-blue-500 bg-blue-50 text-blue-900 font-semibold shadow-xs"
+                              : isDark
+                                ? "border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"
+                                : "border-zinc-200 bg-white text-zinc-600 hover:text-zinc-900 hover:border-zinc-300 shadow-xs"
+                          }`}
+                        >
+                          {p.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 <div
                   className={`rounded-xl border p-4 sm:p-5 shadow-sm transition-colors ${
                     isDark ? "border-zinc-800 bg-zinc-900/50" : "border-zinc-200 bg-white shadow-sm"
@@ -1077,7 +1145,7 @@ export default function StackSenseApp() {
                 </div>
 
                 {/* Stack tab */}
-                {activeTab === "stack" && (
+                {activeTab === "stack" && recommendation.stack && (
                   <div className="space-y-3.5">
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       {[
@@ -1205,7 +1273,7 @@ export default function StackSenseApp() {
                 )}
 
                 {/* Trade-offs tab */}
-                {activeTab === "tradeoffs" && (
+                {activeTab === "tradeoffs" && recommendation.stack && (
                   <div
                     className={`rounded-xl border p-5 space-y-4 ${
                       isDark ? "border-zinc-800/80 bg-zinc-900/40" : "border-zinc-200 bg-white shadow-sm"
@@ -1350,53 +1418,39 @@ export default function StackSenseApp() {
                   to generate a technical stack recommendation and architecture diagram.
                 </p>
 
-                {/* Preset templates */}
-                <div className="mt-6 w-full max-w-sm space-y-2 text-left">
+                {/* Showcase demo templates */}
+                <div className="mt-6 w-full max-w-lg space-y-2 text-left">
                   <span
                     className={`text-[10px] sm:text-xs font-semibold uppercase tracking-wider block text-center ${
                       isDark ? "text-zinc-500" : "text-zinc-400"
                     }`}
                   >
-                    Quick Sample Architectures
+                    Showcase Demo Scenarios
                   </span>
-                  
-                  <button
-                    onClick={() => handleLoadDemo("fintech")}
-                    className={`flex w-full items-center justify-between rounded-lg border p-2.5 text-xs sm:text-sm transition-colors ${
-                      isDark
-                        ? "border-zinc-800 bg-zinc-950 hover:border-zinc-700 hover:bg-zinc-900"
-                        : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50 shadow-sm"
-                    }`}
-                  >
-                    <div>
-                      <div className={`font-medium ${isDark ? "text-zinc-200" : "text-zinc-900"}`}>
-                        Fintech Lending Platform
-                      </div>
-                      <div className={`text-[11px] mt-0.5 ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>
-                        RBI Data Residency, PostgreSQL, AWS Microservices
-                      </div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-zinc-400" />
-                  </button>
-
-                  <button
-                    onClick={() => handleLoadDemo("saas")}
-                    className={`flex w-full items-center justify-between rounded-lg border p-2.5 text-xs sm:text-sm transition-colors ${
-                      isDark
-                        ? "border-zinc-800 bg-zinc-950 hover:border-zinc-700 hover:bg-zinc-900"
-                        : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50 shadow-sm"
-                    }`}
-                  >
-                    <div>
-                      <div className={`font-medium ${isDark ? "text-zinc-200" : "text-zinc-900"}`}>
-                        B2B SaaS Analytics
-                      </div>
-                      <div className={`text-[11px] mt-0.5 ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>
-                        Multi-tenant, Managed Cloud, Next.js & PostgreSQL
-                      </div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-zinc-400" />
-                  </button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                    {DEMO_PRESETS.map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => handleSelectPreset(p)}
+                        className={`flex items-center justify-between rounded-lg border p-2.5 text-xs transition-colors ${
+                          isDark
+                            ? "border-zinc-800 bg-zinc-950 hover:border-zinc-700 hover:bg-zinc-900"
+                            : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50 shadow-sm"
+                        }`}
+                      >
+                        <div className="text-left">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-bold text-[11px] text-blue-500">{p.id}</span>
+                            <span className={`font-medium ${isDark ? "text-zinc-200" : "text-zinc-900"}`}>{p.name}</span>
+                          </div>
+                          <div className={`text-[10px] mt-0.5 ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>
+                            {p.tag}
+                          </div>
+                        </div>
+                        <ChevronRight className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="mt-8 flex flex-wrap justify-center items-center gap-4 text-xs text-zinc-500 font-mono">

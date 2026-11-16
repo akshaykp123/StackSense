@@ -1,6 +1,7 @@
-import { InputScenario } from "../schemas/inputSchema";
+import { InputScenario, InputScenarioSchema } from "../schemas/inputSchema";
 import {
   OutputRecommendation,
+  ValidOutputRecommendation,
   Component,
   SupportingComponent,
 } from "../schemas/outputSchema";
@@ -62,7 +63,7 @@ function calculateCostBand(
   };
 }
 
-export function generateRecommendation(scenario: InputScenario): OutputRecommendation {
+export function generateRecommendation(scenario: InputScenario): ValidOutputRecommendation {
   const warnings = detectConflicts(scenario);
 
   const feScored = scoreCandidates(filterCandidates("frontend", scenario), scenario);
@@ -199,4 +200,37 @@ export function generateRecommendation(scenario: InputScenario): OutputRecommend
     validation_errors: [],
     mermaid_diagram: mermaidDiagram,
   };
+}
+
+export function runEngine(rawInput: unknown): OutputRecommendation {
+  const validationResult = InputScenarioSchema.safeParse(rawInput);
+  if (!validationResult.success) {
+    const raw =
+      rawInput && typeof rawInput === "object"
+        ? (rawInput as Record<string, unknown>)
+        : {};
+    return {
+      scenario_id: typeof raw.scenario_id === "string" ? raw.scenario_id : "UNKNOWN",
+      engine_version: "1.0.0",
+      status: "invalid_input",
+      summary:
+        "Input validation failed. One or more parameters violate schema constraints or type requirements.",
+      architecture_style: "other",
+      stack: null,
+      estimated_monthly_cost_usd: {
+        min: 0,
+        max: 0,
+        assumptions: ["No cost calculated due to input validation failure."],
+      },
+      warnings: [],
+      assumptions: [],
+      validation_errors: validationResult.error.issues.map((err) => ({
+        field: err.path.join("."),
+        message: err.message,
+      })),
+      mermaid_diagram: undefined,
+    };
+  }
+
+  return generateRecommendation(validationResult.data);
 }
