@@ -1,0 +1,20 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Architecture {
+  id                String   @id @default(uuid())
+  name              String
+  domain            String
+  architectureStyle String
+  minCost           Int
+  maxCost           Int
+  scenario          Json
+  recommendation    Json
+  createdAt         DateTime @default(now())
+}
