@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// 1. POST: Save a new architecture to PostgreSQL
+// 1. POST: Save a new architecture recommendation to PostgreSQL
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { name, domain, architectureStyle, minCost, maxCost, scenario, recommendation } = body;
 
+    // Make sure project name and data exist before saving
     if (!name || !scenario || !recommendation) {
       return NextResponse.json(
         { error: "Missing required architecture fields" },
@@ -14,6 +15,7 @@ export async function POST(request: Request) {
       );
     }
 
+    // Save record to Neon PostgreSQL using Prisma
     const saved = await prisma.architecture.create({
       data: {
         name,
@@ -36,9 +38,10 @@ export async function POST(request: Request) {
   }
 }
 
-// 2. GET: Retrieve the most recent saved architectures from PostgreSQL
+// 2. GET: Fetch the 10 most recently saved architectures from PostgreSQL
 export async function GET() {
   try {
+    // Query Neon for latest 10 architectures sorted by newest first
     const architectures = await prisma.architecture.findMany({
       orderBy: { createdAt: "desc" },
       take: 10,

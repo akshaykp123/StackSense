@@ -233,15 +233,18 @@ export default function StackSenseApp() {
 
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
 
+  // Toggle between dark and light mode
   const toggleTheme = () => {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   };
 
+  // Loads a demo preset (e.g. DevFolio or QuickCredit) into the form inputs
   const handleSelectPreset = (preset: PresetItem) => {
     setSelectedPresetId(preset.id);
     setScenario(preset.scenario);
   };
 
+  // Runs the decision engine on the current scenario parameters to generate the architecture
   const handleSynthesize = () => {
     setIsGenerating(true);
     setTimeout(() => {
@@ -257,6 +260,7 @@ export default function StackSenseApp() {
     }, 180);
   };
 
+  // Resets the scenario form back to the clean blank defaults
   const handleReset = () => {
     setSelectedPresetId(null);
     setScenario(DEFAULT_BLANK_SCENARIO);
@@ -285,6 +289,7 @@ export default function StackSenseApp() {
     setRecommendation(null);
   };
 
+  // Imports a user-uploaded JSON scenario file and validates it before loading
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -305,6 +310,7 @@ export default function StackSenseApp() {
     reader.readAsText(file);
   };
 
+  // Exports the generated recommendation as a downloadable JSON file
   const downloadOutputJson = () => {
     if (!recommendation) return;
     const blob = new Blob([JSON.stringify(recommendation, null, 2)], {
@@ -318,6 +324,7 @@ export default function StackSenseApp() {
     URL.revokeObjectURL(url);
   };
 
+  // Toggles platforms (Web, Android, iOS, Desktop) on and off
   const togglePlatform = (plat: "web" | "android" | "ios" | "desktop") => {
     const current = scenario.project.platforms;
     const exists = current.includes(plat as any);

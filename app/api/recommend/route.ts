@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runEngine } from "@/lib/engine/decisionEngine";
 
+// POST /api/recommend: Public API endpoint that receives a scenario and runs the decision engine
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    // Run the deterministic engine on the incoming scenario
     const recommendation = runEngine(body);
     return NextResponse.json(recommendation, { status: 200 });
   } catch (error) {

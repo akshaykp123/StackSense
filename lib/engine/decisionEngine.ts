@@ -19,6 +19,7 @@ export * from "./scorer";
 export * from "./supporting";
 export * from "./diagram";
 
+// Determines whether the overall system should be a monolith, microservices, serverless, or static site
 function determineArchitectureStyle(
   scenario: InputScenario,
   backendId: string,
@@ -31,6 +32,7 @@ function determineArchitectureStyle(
   return "monolith";
 }
 
+// Calculates estimated monthly infrastructure costs (min to max $) based on chosen tools and user count
 function calculateCostBand(
   scenario: InputScenario,
   chosenItems: CatalogItem[]
@@ -63,14 +65,18 @@ function calculateCostBand(
   };
 }
 
+// Main recommendation engine: filters, scores, and selects the best tech stack for the given scenario
 export function generateRecommendation(scenario: InputScenario): ValidOutputRecommendation {
+  // Step 1: Detect potential architectural risks or bottlenecks (e.g. high traffic with tiny budget)
   const warnings = detectConflicts(scenario);
 
+  // Step 2: Filter out incompatible tools, then score the rest for each layer
   const feScored = scoreCandidates(filterCandidates("frontend", scenario), scenario);
   const beScored = scoreCandidates(filterCandidates("backend", scenario), scenario);
   const dbScored = scoreCandidates(filterCandidates("database", scenario), scenario);
   const hostScored = scoreCandidates(filterCandidates("hosting", scenario), scenario);
 
+  // Step 3: Pick the highest-scoring tool as the winner, and 2nd place as the alternative
   const feWinner = feScored[0].item;
   const feRunnerUp = feScored[1]?.item;
 
@@ -161,12 +167,14 @@ export function generateRecommendation(scenario: InputScenario): ValidOutputReco
     tradeoffs: hostWinner.tradeoffs,
   };
 
+  // Step 4: Pick supporting add-ons (Redis cache, Kafka queue, S3 storage)
   const supporting = selectSupportingServices(scenario);
   const architectureStyle = determineArchitectureStyle(scenario, beWinner.id, hostWinner.id);
   const costBand = calculateCostBand(scenario, [feWinner, beWinner, dbWinner, hostWinner]);
 
   const summary = `${architectureStyle.replace("_", " ").toUpperCase()} architecture optimized for ${scenario.scale.users_12_months.toLocaleString()} users, prioritizing ${scenario.priorities.cost >= 4 ? "cost efficiency" : "scalability"} and rapid time-to-market.`;
 
+  // Step 5: Generate the visual architecture diagram in Mermaid.js syntax
   const mermaidDiagram = generateMermaidDiagram(
     feWinner.name,
     beWinner.name,
@@ -202,6 +210,7 @@ export function generateRecommendation(scenario: InputScenario): ValidOutputReco
   };
 }
 
+// Entry point with input validation: safely checks the raw JSON with Zod before running the engine
 export function runEngine(rawInput: unknown): OutputRecommendation {
   const validationResult = InputScenarioSchema.safeParse(rawInput);
   if (!validationResult.success) {

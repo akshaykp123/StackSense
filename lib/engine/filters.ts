@@ -1,7 +1,8 @@
 import { InputScenario } from "../schemas/inputSchema";
 import { TECH_CATALOG, CatalogItem } from "../catalog";
 
-// Prunes unfeasible candidates before scoring
+// Hard constraint filter: removes tools that cannot physically work for this project
+// (e.g., air-gapped apps cannot use public cloud; realtime apps cannot run on pure serverless)
 export function filterCandidates(
   layer: "frontend" | "backend" | "database" | "hosting",
   scenario: InputScenario

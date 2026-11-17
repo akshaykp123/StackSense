@@ -2,11 +2,11 @@ import { InputScenario } from "../schemas/inputSchema";
 import { SupportingComponent } from "../schemas/outputSchema";
 import { TECH_CATALOG } from "../catalog";
 
-// Selects add-on services based on specific requirements
+// Selects supporting add-on services (Redis cache, Kafka queue, S3 storage, Auth0) based on project needs
 export function selectSupportingServices(scenario: InputScenario): SupportingComponent[] {
   const supporting: SupportingComponent[] = [];
 
-  // File and media storage
+  // 1. File Storage: Add AWS S3 if the project needs file or media uploads
   if (scenario.requirements.file_media_storage) {
     const s3 = TECH_CATALOG.find((t) => t.id === "aws_s3_storage");
     if (s3) {
@@ -21,7 +21,7 @@ export function selectSupportingServices(scenario: InputScenario): SupportingCom
     }
   }
 
-  // Caching and pub/sub
+  // 2. In-Memory Cache: Add Redis if traffic is spiky, read-heavy, or needs real-time pub/sub
   const needsCache =
     scenario.requirements.realtime ||
     scenario.scale.traffic_pattern === "spiky" ||

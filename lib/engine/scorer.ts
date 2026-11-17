@@ -14,19 +14,20 @@ export interface ScoredCandidate {
   };
 }
 
+// Scores each remaining candidate technology (0 to 100+) based on team skills, priorities, scale, and budget
 export function scoreCandidates(
   candidates: CatalogItem[],
   scenario: InputScenario
 ): ScoredCandidate[] {
   const scored = candidates.map((item) => {
-    // Weighted priority score based on user preference sliders
+    // 1. Calculate points from user priority sliders (cost, scale, speed, simplicity)
     const costScore = item.cost_rating * scenario.priorities.cost * 3;
     const scaleScore = item.scalability_rating * scenario.priorities.scalability * 3;
     const ttmScore = item.time_to_market_rating * scenario.priorities.time_to_market * 3;
     const simplicityScore = (11 - item.complexity_rating) * scenario.priorities.maintainability * 2;
     const priorityScore = costScore + scaleScore + ttmScore + simplicityScore;
 
-    // Team language familiarity bonus: reward deeper multi-skill alignment
+    // 2. Skill bonus: give extra points if the team already knows the language (e.g. JavaScript or Python)
     let skillBonus = 0;
     if (scenario.team.languages.length > 0 && item.languages.length > 0) {
       const matchingCount = item.languages.filter((lang) =>
@@ -37,7 +38,7 @@ export function scoreCandidates(
       }
     }
 
-    // Architectural workload & domain alignment bonuses (based on tool capabilities and requirements, not hardcoded IDs)
+    // 3. Domain bonus: extra points for fintech ACID support, high-concurrency runtimes, or compliance
     let domainBonus = 0;
 
     // 1. Regulatory Compliance Alignment Bonus (reward frameworks matching exact mandated audits)
@@ -99,13 +100,13 @@ export function scoreCandidates(
       }
     }
 
-    // Penalty if tool requires devops but team lacks one
+    // 4. DevOps penalty: subtract points if tool needs DevOps engineers, but the team has none
     let devopsPenalty = 0;
     if (!scenario.team.has_devops && item.requires_devops) {
       devopsPenalty = -40;
     }
 
-    // Scale adjustments: favor proven scale, penalize over-engineering for small projects
+    // 5. Over-engineering check: penalize high complexity for small projects, reward high scale for large projects
     let scaleBonus = 0;
     if (scenario.scale.users_12_months >= 100000 && item.scalability_rating >= 9) {
       scaleBonus += 25;
@@ -114,12 +115,13 @@ export function scoreCandidates(
       scaleBonus -= 20;
     }
 
-    // Penalty if baseline cost exceeds monthly budget
+    // 6. Budget penalty: subtract points if tool's base price exceeds the monthly budget
     let budgetPenalty = 0;
     if (item.min_monthly_cost_usd > scenario.budget.monthly_infra_usd) {
       budgetPenalty = -50;
     }
 
+    // Calculate total score by combining priorities, bonuses, and penalties
     const totalScore =
       priorityScore + skillBonus + domainBonus + devopsPenalty + scaleBonus + budgetPenalty;
 
