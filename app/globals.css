@@ -1,28 +1,116 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0b0e;
-  --foreground: #fafafa;
+  /* Default to dark mode tokens */
+  --bg-app: #0B0C0E;
+  --bg-surface: #121419;
+  --bg-raised: #181B22;
+  --bg-overlay: #1E222A;
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --text-primary: #ECEDEF;
+  --text-secondary: #A0A4AB;
+  --text-tertiary: #6B7078;
+  --accent: #6E7BFF;
+  --accent-hover: #828DFF;
+  --accent-muted: rgba(110, 123, 255, 0.12);
+  --accent-foreground: #FFFFFF;
+  --warning: #F59E0B;
+  --warning-muted: rgba(245, 158, 11, 0.10);
+  --warning-border: rgba(245, 158, 11, 0.25);
+  --danger: #EF4444;
+  --danger-muted: rgba(239, 68, 68, 0.10);
+  --danger-border: rgba(239, 68, 68, 0.25);
+  --success: #34D399;
+  --success-muted: rgba(52, 211, 153, 0.10);
+  --success-border: rgba(52, 211, 153, 0.25);
+  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+  --shadow-overlay: 0 16px 40px -8px rgba(0, 0, 0, 0.6);
 }
 
 html.light {
-  --background: #f1f3f5;
-  --foreground: #09090b;
+  --bg-app: #F8F9FA;
+  --bg-surface: #FFFFFF;
+  --bg-raised: #F1F3F5;
+  --bg-overlay: #FFFFFF;
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-hover: rgba(0, 0, 0, 0.12);
+  --border-strong: rgba(0, 0, 0, 0.18);
+  --text-primary: #111318;
+  --text-secondary: #525866;
+  --text-tertiary: #8A909E;
+  --accent: #4F5BD5;
+  --accent-hover: #3E4AB8;
+  --accent-muted: rgba(79, 91, 213, 0.08);
+  --accent-foreground: #FFFFFF;
+  --warning: #D97706;
+  --warning-muted: rgba(217, 119, 6, 0.08);
+  --warning-border: rgba(217, 119, 6, 0.20);
+  --danger: #DC2626;
+  --danger-muted: rgba(220, 38, 38, 0.08);
+  --danger-border: rgba(220, 38, 38, 0.20);
+  --success: #059669;
+  --success-muted: rgba(5, 150, 105, 0.08);
+  --success-border: rgba(5, 150, 105, 0.20);
+  --shadow-card: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --shadow-overlay: 0 16px 40px -8px rgba(0, 0, 0, 0.12);
 }
 
 html.dark {
-  --background: #0a0b0e;
-  --foreground: #f4f4f5;
+  --bg-app: #0B0C0E;
+  --bg-surface: #121419;
+  --bg-raised: #181B22;
+  --bg-overlay: #1E222A;
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --text-primary: #ECEDEF;
+  --text-secondary: #A0A4AB;
+  --text-tertiary: #6B7078;
+  --accent: #6E7BFF;
+  --accent-hover: #828DFF;
+  --accent-muted: rgba(110, 123, 255, 0.12);
+  --accent-foreground: #FFFFFF;
+  --warning: #F59E0B;
+  --warning-muted: rgba(245, 158, 11, 0.10);
+  --warning-border: rgba(245, 158, 11, 0.25);
+  --danger: #EF4444;
+  --danger-muted: rgba(239, 68, 68, 0.10);
+  --danger-border: rgba(239, 68, 68, 0.25);
+  --success: #34D399;
+  --success-muted: rgba(52, 211, 153, 0.10);
+  --success-border: rgba(52, 211, 153, 0.25);
+  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+  --shadow-overlay: 0 16px 40px -8px rgba(0, 0, 0, 0.6);
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
+  background-color: var(--bg-app);
+  color: var(--text-primary);
   font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Shared layout container: unified 1560px container across header, content, and action bar */
+.app-container {
+  width: 100%;
+  max-width: 1560px;
+  margin-inline: auto;
+  padding-inline: clamp(16px, 3vw, 40px);
+}
+
+/* Hide scrollbar utility */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* Hide Next.js dev indicator overlay */
@@ -42,27 +130,80 @@ nextjs-portal,
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: var(--border-hover);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: var(--border-strong);
 }
 
 /* Responsive range slider styling */
-.dark input[type="range"] {
-  accent-color: #f4f4f5;
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--border-strong);
+  outline: none;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
 }
-.light input[type="range"], input[type="range"] {
-  accent-color: #18181b;
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid var(--accent);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid var(--accent);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+input[type="range"]::-moz-range-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--border-strong);
 }
 
 /* Clean select arrow styling */
 select {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2371717a' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%238A909E' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
   background-position: right 0.75rem center;
   background-repeat: no-repeat;
   background-size: 1.25em 1.25em;
   padding-right: 2.25rem;
   appearance: none;
+}
+html.dark select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23A0A4AB' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+}
+
+/* Tabular figures for data metrics */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }

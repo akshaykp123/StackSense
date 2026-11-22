@@ -1,3 +1,4 @@
+// Root Layout for StackSense Architecture Engine
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -42,7 +43,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col bg-[#0a0b0e] text-zinc-100 antialiased selection:bg-zinc-800 selection:text-white">
+      <body className="min-h-full flex flex-col bg-[var(--bg-app)] text-[var(--text-primary)] antialiased selection:bg-[var(--accent)] selection:text-white">
         {children}
       </body>
     </html>
