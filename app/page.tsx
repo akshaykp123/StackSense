@@ -331,7 +331,8 @@ export default function StackSenseApp() {
         setIsSaved(true);
         await fetchSavedArchitectures();
       } else {
-        alert("Failed to save architecture. Please try again.");
+        const errorJson = await res.json().catch(() => null);
+        alert(errorJson?.error || "Failed to save architecture. Please try again.");
       }
     } catch (err) {
       console.error("Failed to save to database:", err);
@@ -361,7 +362,8 @@ export default function StackSenseApp() {
       if (res.ok) {
         setSavedArchitectures((prev) => prev.filter((a) => a.id !== id));
       } else {
-        alert("Failed to delete architecture.");
+        const errorJson = await res.json().catch(() => null);
+        alert(errorJson?.error || "Failed to delete architecture.");
       }
     } catch (err) {
       console.error("Delete error:", err);
