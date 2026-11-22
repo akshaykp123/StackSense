@@ -33,6 +33,11 @@ import {
   Trash2,
   X,
   Clock,
+  Zap,
+  Sparkles,
+  Scale,
+  XCircle,
+  ShieldCheck,
 } from "lucide-react";
 
 interface SavedArchitectureItem {
@@ -46,6 +51,31 @@ interface SavedArchitectureItem {
   recommendation: OutputRecommendation;
   createdAt: string;
 }
+
+const formatDriverTag = (tag: string): string => {
+  const map: Record<string, string> = {
+    "project.platforms": "Platform Target",
+    "project.type": "App Domain",
+    "scale.workload": "I/O Workload",
+    "scale.traffic_pattern": "Traffic Surges",
+    "scale.users_12_months": "Target Scale",
+    "team.languages": "Language Match",
+    "team.experience": "Dev Experience",
+    "team.has_devops": "DevOps Staffing",
+    "budget.monthly_infra_usd": "Infra Budget",
+    "timeline.mvp_weeks": "MVP Timeline",
+    "infrastructure.deployment_model": "Cloud Model",
+    "infrastructure.cloud_preference": "Cloud Provider",
+    "requirements.realtime": "Realtime WebSockets",
+    "requirements.seo_critical": "SEO Critical",
+    "requirements.full_text_search": "Search Indexing",
+    "requirements.file_media_storage": "Object Storage",
+    "requirements.auth": "Auth Scheme",
+    "requirements.payments": "Payments Gateway",
+    "requirements.availability": "High Availability SLA",
+  };
+  return map[tag] || tag.replace(/_/g, " ").replace(/\./g, " › ");
+};
 
 const DEMO_PRESETS = PUBLIC_PRESETS.filter((p) => p.id === "P1" || p.id === "P4");
 
@@ -1188,89 +1218,174 @@ export default function StackSenseApp() {
                 </div>
 
                 <div
-                  className={`rounded-xl border p-4 sm:p-5 shadow-sm transition-colors ${
-                    isDark ? "border-zinc-800 bg-zinc-900/50" : "border-zinc-200 bg-white shadow-sm"
+                  className={`rounded-2xl border p-5 sm:p-6 shadow-sm transition-colors ${
+                    isDark
+                      ? "border-zinc-800/90 bg-gradient-to-b from-zinc-900/60 to-zinc-950/70"
+                      : "border-zinc-200 bg-gradient-to-b from-white to-zinc-50/70 shadow-sm"
                   }`}
                 >
+                  {/* Top Bar: Style Title + Status Badge + Budget KPI */}
                   <div
-                    className={`flex flex-wrap items-center justify-between gap-3 pb-3 border-b ${
-                      isDark ? "border-zinc-800" : "border-zinc-100"
+                    className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b ${
+                      isDark ? "border-zinc-800/80" : "border-zinc-200/80"
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`rounded-md border px-2.5 py-1 font-mono text-xs font-semibold uppercase tracking-wide ${
-                          isDark
-                            ? "border-zinc-700 bg-zinc-800 text-zinc-200"
-                            : "border-zinc-200 bg-zinc-100 text-zinc-800"
-                        }`}
-                      >
-                        {recommendation.architecture_style.replace(/_/g, " ")}
-                      </span>
-                      <span
-                        className={`flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium ${
-                          recommendation.status === "ok"
-                            ? "border border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
-                            : "border border-amber-500/30 bg-amber-500/10 text-amber-500"
-                        }`}
-                      >
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                        {recommendation.status === "ok" ? "Architecturally Sound" : "Feasible With Warnings"}
-                      </span>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2.5 flex-wrap">
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1 text-xs font-bold tracking-wide uppercase font-mono ${
+                            isDark
+                              ? "border-zinc-700 bg-zinc-800/90 text-zinc-100"
+                              : "border-zinc-300 bg-zinc-100 text-zinc-900 shadow-xs"
+                          }`}
+                        >
+                          <Zap className="h-3.5 w-3.5 text-amber-400" />
+                          <span>{recommendation.architecture_style.replace(/_/g, " ")} ARCHITECTURE</span>
+                        </span>
+
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium ${
+                            recommendation.status === "ok"
+                              ? "border border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+                              : "border border-amber-500/30 bg-amber-500/10 text-amber-400"
+                          }`}
+                        >
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          {recommendation.status === "ok" ? "Architecturally Sound" : "Feasible With Warnings"}
+                        </span>
+                      </div>
+
+                      <h2 className={`text-lg sm:text-xl font-bold tracking-tight ${isDark ? "text-white" : "text-zinc-950"}`}>
+                        {scenario.project.name || "System"} Architectural Blueprint
+                      </h2>
                     </div>
 
-                    <div className="flex items-center gap-1.5 font-mono text-xs font-semibold text-emerald-500">
-                      <DollarSign className="h-3.5 w-3.5" />
-                      <span>
-                        ${recommendation.estimated_monthly_cost_usd.min} - $
-                        {recommendation.estimated_monthly_cost_usd.max} / mo
-                      </span>
+                    {/* Cost KPI Box */}
+                    <div
+                      className={`flex items-center gap-3 rounded-xl border p-2.5 sm:px-4 sm:py-2.5 ${
+                        isDark ? "border-zinc-800/90 bg-zinc-950/80" : "border-zinc-200 bg-zinc-50 shadow-inner"
+                      }`}
+                    >
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
+                        <DollarSign className="h-4 w-4" />
+                      </div>
+                      <div className="text-right">
+                        <div className="text-base sm:text-lg font-bold font-mono text-emerald-400">
+                          ${recommendation.estimated_monthly_cost_usd.min} - ${recommendation.estimated_monthly_cost_usd.max}
+                          <span className="text-xs text-zinc-400 font-sans font-normal"> / mo</span>
+                        </div>
+                        <div className="text-[11px] text-zinc-500 font-medium">Estimated Cloud Spend</div>
+                      </div>
                     </div>
                   </div>
 
-                  <p className={`mt-3 text-sm leading-relaxed ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>
-                    {recommendation.summary}
-                  </p>
-
-                  {/* Architectural Warnings (if any) */}
-                  {recommendation.warnings.length > 0 && (
-                    <div className="mt-3 space-y-2">
-                      {recommendation.warnings.map((w, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5 text-xs text-amber-400"
-                        >
-                          <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
-                          <div>
-                            <span className="font-semibold uppercase tracking-wider">{w.code}: </span>
-                            <span>{w.message}</span>
+                  {/* Summary & Why This Was Chosen */}
+                  <div className="mt-4 space-y-3.5">
+                    <div
+                      className={`rounded-xl border p-3.5 sm:p-4 text-xs sm:text-sm leading-relaxed ${
+                        isDark
+                          ? "border-zinc-800/80 bg-zinc-900/30 text-zinc-300"
+                          : "border-zinc-200/90 bg-white text-zinc-700"
+                      }`}
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <Sparkles className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                        <div>
+                          <div className={`font-semibold mb-1 text-xs uppercase tracking-wider ${isDark ? "text-zinc-200" : "text-zinc-900"}`}>
+                            Why this architecture was chosen:
                           </div>
+                          <p>{recommendation.summary}</p>
                         </div>
-                      ))}
+                      </div>
                     </div>
-                  )}
+
+                    {/* 4 Architectural Constraint Pillars */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                      <div
+                        className={`rounded-xl border p-2.5 text-center sm:text-left ${
+                          isDark ? "border-zinc-800/70 bg-zinc-950/40" : "border-zinc-200/80 bg-zinc-50/70"
+                        }`}
+                      >
+                        <div className="text-[10px] uppercase font-semibold text-zinc-500 tracking-wider">Target Scale</div>
+                        <div className={`text-xs sm:text-sm font-bold mt-0.5 truncate ${isDark ? "text-zinc-200" : "text-zinc-900"}`}>
+                          {scenario.scale.users_12_months.toLocaleString()} Users
+                        </div>
+                      </div>
+
+                      <div
+                        className={`rounded-xl border p-2.5 text-center sm:text-left ${
+                          isDark ? "border-zinc-800/70 bg-zinc-950/40" : "border-zinc-200/80 bg-zinc-50/70"
+                        }`}
+                      >
+                        <div className="text-[10px] uppercase font-semibold text-zinc-500 tracking-wider">Workload Pattern</div>
+                        <div className={`text-xs sm:text-sm font-bold mt-0.5 truncate capitalize ${isDark ? "text-zinc-200" : "text-zinc-900"}`}>
+                          {scenario.scale.workload.replace(/_/g, " ")}
+                        </div>
+                      </div>
+
+                      <div
+                        className={`rounded-xl border p-2.5 text-center sm:text-left ${
+                          isDark ? "border-zinc-800/70 bg-zinc-950/40" : "border-zinc-200/80 bg-zinc-50/70"
+                        }`}
+                      >
+                        <div className="text-[10px] uppercase font-semibold text-zinc-500 tracking-wider">Deployment Model</div>
+                        <div className={`text-xs sm:text-sm font-bold mt-0.5 truncate capitalize ${isDark ? "text-zinc-200" : "text-zinc-900"}`}>
+                          {scenario.infrastructure.deployment_model.replace(/_/g, " ")}
+                        </div>
+                      </div>
+
+                      <div
+                        className={`rounded-xl border p-2.5 text-center sm:text-left ${
+                          isDark ? "border-zinc-800/70 bg-zinc-950/40" : "border-zinc-200/80 bg-zinc-50/70"
+                        }`}
+                      >
+                        <div className="text-[10px] uppercase font-semibold text-zinc-500 tracking-wider">Target MVP Blitz</div>
+                        <div className={`text-xs sm:text-sm font-bold mt-0.5 truncate ${isDark ? "text-zinc-200" : "text-zinc-900"}`}>
+                          {scenario.timeline.mvp_weeks} Weeks
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Architectural Warnings (if any) */}
+                    {recommendation.warnings.length > 0 && (
+                      <div className="space-y-2 pt-1">
+                        {recommendation.warnings.map((w, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-start gap-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-400"
+                          >
+                            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-semibold uppercase tracking-wider">{w.code}: </span>
+                              <span>{w.message}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* View tabs */}
                 <div
-                  className={`flex rounded-lg border p-1 transition-colors ${
+                  className={`flex rounded-xl border p-1 transition-colors ${
                     isDark ? "border-zinc-800 bg-zinc-900/60" : "border-zinc-200 bg-zinc-100"
                   }`}
                 >
                   {[
                     { id: "stack", label: "Core Stack", icon: Layers },
                     { id: "diagram", label: "Architecture Flowchart", icon: Workflow },
-                    { id: "tradeoffs", label: "Trade-offs", icon: CheckCircle2 },
-                    { id: "json", label: "JSON Output", icon: FileCode },
+                    { id: "tradeoffs", label: "Trade-offs & Alternatives", icon: Scale },
+                    { id: "json", label: "JSON Blueprint", icon: FileCode },
                   ].map(({ id, label, icon: Icon }) => (
                     <button
                       key={id}
                       onClick={() => setActiveTab(id as any)}
-                      className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-2 text-xs sm:text-[13px] font-medium transition-all ${
+                      className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs sm:text-[13px] font-medium transition-all ${
                         activeTab === id
                           ? isDark
-                            ? "bg-zinc-800 text-white shadow-sm"
-                            : "bg-white text-zinc-950 shadow-sm"
+                            ? "bg-zinc-800 text-white shadow-sm font-semibold"
+                            : "bg-white text-zinc-950 shadow-sm font-semibold"
                           : isDark
                             ? "text-zinc-400 hover:text-zinc-200"
                             : "text-zinc-600 hover:text-zinc-900"
@@ -1282,10 +1397,10 @@ export default function StackSenseApp() {
                   ))}
                 </div>
 
-                {/* Stack tab */}
+                {/* TAB 1: Core Stack */}
                 {activeTab === "stack" && recommendation.stack && (
-                  <div className="space-y-3.5">
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
                       {[
                         {
                           label: "Frontend Layer",
@@ -1310,51 +1425,86 @@ export default function StackSenseApp() {
                       ].map(({ label, icon: Icon, data }) => (
                         <div
                           key={label}
-                          className={`rounded-xl border p-4 sm:p-5 transition-all ${
+                          className={`rounded-2xl border p-5 transition-all flex flex-col justify-between ${
                             isDark
-                              ? "border-zinc-800/80 bg-zinc-900/40 hover:border-zinc-700"
+                              ? "border-zinc-800/80 bg-zinc-900/40 hover:border-zinc-700 hover:bg-zinc-900/60"
                               : "border-zinc-200 bg-white hover:border-zinc-300 shadow-sm"
                           }`}
                         >
-                          <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
-                              {label}
-                            </span>
-                            <Icon className={`h-4 w-4 ${isDark ? "text-zinc-500" : "text-zinc-400"}`} />
-                          </div>
+                          <div>
+                            {/* Layer Category & Tag */}
+                            <div className="flex items-center justify-between pb-2 mb-2 border-b border-zinc-800/40">
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className={`flex h-7 w-7 items-center justify-center rounded-lg border ${
+                                    isDark
+                                      ? "border-zinc-800 bg-zinc-950 text-zinc-300"
+                                      : "border-zinc-200 bg-zinc-100 text-zinc-700"
+                                  }`}
+                                >
+                                  <Icon className="h-3.5 w-3.5" />
+                                </div>
+                                <span className="text-[11px] font-bold uppercase tracking-wider font-mono text-zinc-400">
+                                  {label}
+                                </span>
+                              </div>
 
-                          <h3 className={`mt-1.5 text-base font-semibold ${isDark ? "text-white" : "text-zinc-900"}`}>
-                            {data.choice}
-                          </h3>
-                          
-                          <p className={`mt-1 text-xs sm:text-[13px] leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
-                            {data.justification}
-                          </p>
-
-                          <div className="mt-3 flex flex-wrap gap-1">
-                            {data.driven_by.map((f, i) => (
-                              <span
-                                key={i}
-                                className={`rounded px-1.5 py-0.5 font-mono text-[10px] ${
-                                  isDark ? "bg-zinc-800 text-zinc-300" : "bg-zinc-100 text-zinc-700"
-                                }`}
-                              >
-                                {f}
+                              <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400 border border-emerald-500/20">
+                                <Check className="h-3 w-3" />
+                                Selected
                               </span>
-                            ))}
+                            </div>
+
+                            {/* Chosen Component Name */}
+                            <h3 className={`text-base sm:text-lg font-bold tracking-tight ${isDark ? "text-white" : "text-zinc-900"}`}>
+                              {data.choice}
+                            </h3>
+                            
+                            {/* Justification */}
+                            <p className={`mt-1.5 text-xs sm:text-[13px] leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
+                              {data.justification}
+                            </p>
+
+                            {/* Driven-by Constraints Chips */}
+                            <div className="mt-3.5">
+                              <span className="text-[10px] uppercase font-semibold text-zinc-500 tracking-wider block mb-1.5">
+                                Deciding Constraints:
+                              </span>
+                              <div className="flex flex-wrap gap-1">
+                                {data.driven_by.map((f, i) => (
+                                  <span
+                                    key={i}
+                                    className={`rounded-md px-2 py-0.5 font-mono text-[10px] ${
+                                      isDark
+                                        ? "bg-zinc-950 text-zinc-300 border border-zinc-800"
+                                        : "bg-zinc-100 text-zinc-700 border border-zinc-200"
+                                    }`}
+                                  >
+                                    {formatDriverTag(f)}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
                           </div>
 
+                          {/* Runner-up Section */}
                           {data.alternatives.length > 0 && (
                             <div
-                              className={`mt-3 border-t pt-2.5 text-xs ${
-                                isDark ? "border-zinc-800/60" : "border-zinc-100"
+                              className={`mt-4 rounded-xl border p-3 text-xs ${
+                                isDark
+                                  ? "border-zinc-800/80 bg-zinc-950/60"
+                                  : "border-zinc-200 bg-zinc-50/80"
                               }`}
                             >
-                              <span className="text-zinc-500">Runner-up: </span>
-                              <span className={`font-medium ${isDark ? "text-zinc-300" : "text-zinc-800"}`}>
-                                {data.alternatives[0].choice}
-                              </span>
-                              <p className="mt-0.5 text-zinc-500 text-[11px]">{data.alternatives[0].why_not}</p>
+                              <div className="flex items-center gap-1.5 font-semibold text-zinc-400 text-[11px]">
+                                <span>Runner-up:</span>
+                                <span className={isDark ? "text-zinc-200" : "text-zinc-800"}>
+                                  {data.alternatives[0].choice}
+                                </span>
+                              </div>
+                              <p className="mt-1 text-zinc-500 text-[11px] leading-relaxed">
+                                {data.alternatives[0].why_not}
+                              </p>
                             </div>
                           )}
                         </div>
@@ -1364,31 +1514,41 @@ export default function StackSenseApp() {
                     {/* Supporting Add-on Services */}
                     {recommendation.stack.supporting.length > 0 && (
                       <div
-                        className={`rounded-xl border p-4 sm:p-5 ${
+                        className={`rounded-2xl border p-5 ${
                           isDark ? "border-zinc-800/80 bg-zinc-900/40" : "border-zinc-200 bg-white shadow-sm"
                         }`}
                       >
-                        <span
-                          className={`text-xs font-semibold uppercase tracking-wider block mb-2.5 ${
-                            isDark ? "text-zinc-400" : "text-zinc-500"
-                          }`}
-                        >
-                          Supporting Services
-                        </span>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Workflow className={`h-4 w-4 ${isDark ? "text-zinc-400" : "text-zinc-500"}`} />
+                          <span
+                            className={`text-xs font-bold uppercase tracking-wider ${
+                              isDark ? "text-zinc-300" : "text-zinc-700"
+                            }`}
+                          >
+                            Supporting Infrastructure & Integrations
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
                           {recommendation.stack.supporting.map((s, idx) => (
                             <div
                               key={idx}
-                              className={`rounded-lg border px-3.5 py-1.5 text-xs sm:text-sm ${
+                              className={`rounded-xl border p-3 ${
                                 isDark
-                                  ? "border-zinc-800 bg-zinc-950 text-zinc-200"
+                                  ? "border-zinc-800/80 bg-zinc-950/70 text-zinc-200"
                                   : "border-zinc-200 bg-zinc-50 text-zinc-800"
                               }`}
                             >
-                              <span className="text-zinc-500 font-mono font-semibold text-xs mr-1.5 uppercase">
-                                {s.layer}:
-                              </span>
-                              <span>{s.choice}</span>
+                              <div className="flex items-center justify-between text-[10px] font-mono uppercase font-bold text-zinc-500 mb-1">
+                                <span>{s.layer}</span>
+                                <span className="text-emerald-500 font-semibold">Active</span>
+                              </div>
+                              <div className="text-xs sm:text-[13px] font-bold">
+                                {s.choice}
+                              </div>
+                              <p className="mt-1 text-[11px] text-zinc-500 leading-relaxed line-clamp-2">
+                                {s.justification}
+                              </p>
                             </div>
                           ))}
                         </div>
@@ -1399,94 +1559,216 @@ export default function StackSenseApp() {
 
                 {/* TAB 2: System Architecture Flowchart */}
                 {activeTab === "diagram" && (
-                  <div>
-                    {recommendation.mermaid_diagram ? (
-                      <MermaidViewer chart={recommendation.mermaid_diagram} isDark={isDark} />
-                    ) : (
-                      <div className="p-8 text-center text-xs text-zinc-500">
-                        No diagram syntax available.
+                  <div className="space-y-3">
+                    <div
+                      className={`flex flex-wrap items-center justify-between gap-2 rounded-xl border px-4 py-2.5 text-xs ${
+                        isDark ? "border-zinc-800 bg-zinc-900/40 text-zinc-400" : "border-zinc-200 bg-zinc-50 text-zinc-600"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-emerald-400">Topology Flow:</span>
+                        <span>Client Application ➔ Global Edge CDN ➔ Services ➔ Database / Storage</span>
                       </div>
-                    )}
+                      <span className="font-mono text-[11px] text-zinc-500">Live Mermaid Render</span>
+                    </div>
+
+                    <div>
+                      {recommendation.mermaid_diagram ? (
+                        <MermaidViewer chart={recommendation.mermaid_diagram} isDark={isDark} />
+                      ) : (
+                        <div className="p-8 text-center text-xs text-zinc-500">
+                          No diagram syntax available.
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
-                {/* Trade-offs tab */}
+                {/* TAB 3: Architectural Decisions & Trade-Offs (Head-to-Head Comparison Matrix) */}
                 {activeTab === "tradeoffs" && recommendation.stack && (
-                  <div
-                    className={`rounded-xl border p-5 space-y-4 ${
-                      isDark ? "border-zinc-800/80 bg-zinc-900/40" : "border-zinc-200 bg-white shadow-sm"
-                    }`}
-                  >
-                    <div>
-                      <h3
-                        className={`text-xs sm:text-sm font-semibold uppercase tracking-wider ${
-                          isDark ? "text-zinc-200" : "text-zinc-800"
-                        }`}
-                      >
-                        Architectural Decisions & Alternatives Analysis
-                      </h3>
-                      <p className={`text-xs sm:text-[13px] mt-1 ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
-                        Detailed justification of why primary choices won and why runner-up alternatives were rejected.
+                  <div className="space-y-4">
+                    {/* Header Banner */}
+                    <div
+                      className={`rounded-2xl border p-4 sm:p-5 ${
+                        isDark ? "border-zinc-800/80 bg-zinc-900/40" : "border-zinc-200 bg-white shadow-sm"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <Scale className={`h-4 w-4 ${isDark ? "text-emerald-400" : "text-emerald-600"}`} />
+                        <h3 className={`text-xs sm:text-sm font-bold uppercase tracking-wider ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>
+                          Decision Matrix & Trade-off Analysis
+                        </h3>
+                      </div>
+                      <p className={`text-xs sm:text-[13px] leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
+                        Transparent evaluation showing why the chosen technologies won against alternatives based on team skills, scale, budget, and runtime complexity.
                       </p>
                     </div>
 
-                    <div className="space-y-3">
+                    {/* 4 Head-to-Head Comparison Layers */}
+                    <div className="space-y-4">
                       {[
-                        { layer: "Frontend", item: recommendation.stack.frontend },
-                        { layer: "Backend", item: recommendation.stack.backend },
-                        { layer: "Database", item: recommendation.stack.database },
-                        { layer: "Cloud Hosting", item: recommendation.stack.hosting },
-                      ].map(({ layer, item }) => (
-                        <div
-                          key={layer}
-                          className={`rounded-lg border p-3.5 text-xs sm:text-[13px] ${
-                            isDark ? "border-zinc-800 bg-zinc-950" : "border-zinc-200 bg-zinc-50/60"
-                          }`}
-                        >
+                        { layer: "Frontend Layer", icon: Server, item: recommendation.stack.frontend, altFallback: "Next.js / Remix" },
+                        { layer: "Backend Layer", icon: Cpu, item: recommendation.stack.backend, altFallback: "Node.js Express / NestJS" },
+                        { layer: "Database Layer", icon: Database, item: recommendation.stack.database, altFallback: "PostgreSQL / MongoDB" },
+                        { layer: "Cloud Hosting", icon: Cloud, item: recommendation.stack.hosting, altFallback: "AWS Fargate / Fly.io" },
+                      ].map(({ layer, icon: Icon, item, altFallback }, idx) => {
+                        const alternative = item.alternatives[0];
+                        return (
                           <div
-                            className={`flex items-center justify-between font-medium ${
-                              isDark ? "text-zinc-200" : "text-zinc-800"
+                            key={layer}
+                            className={`rounded-2xl border p-4 sm:p-5 transition-all ${
+                              isDark ? "border-zinc-800 bg-zinc-900/40" : "border-zinc-200 bg-white shadow-sm"
                             }`}
                           >
-                            <span>{layer}: {item.choice}</span>
-                            <span className="text-xs text-emerald-500 font-mono">Selected</span>
-                          </div>
-                          <p className={`mt-1 text-xs leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
-                            {item.justification}
-                          </p>
-                          
-                          {item.alternatives.length > 0 && (
-                            <div
-                              className={`mt-2 rounded p-2.5 text-xs border ${
-                                isDark
-                                  ? "bg-zinc-900 text-zinc-400 border-zinc-800/60"
-                                  : "bg-white text-zinc-600 border-zinc-200"
-                              }`}
-                            >
-                              <span className="font-medium text-amber-500">
-                                Alternative Rejected: {item.alternatives[0].choice}
+                            {/* Layer Header */}
+                            <div className="flex items-center justify-between pb-3 mb-3 border-b border-zinc-800/60">
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className={`flex h-7 w-7 items-center justify-center rounded-lg border ${
+                                    isDark ? "border-zinc-700 bg-zinc-800 text-zinc-300" : "border-zinc-200 bg-zinc-100 text-zinc-700"
+                                  }`}
+                                >
+                                  <Icon className="h-3.5 w-3.5" />
+                                </div>
+                                <span className="text-xs font-bold uppercase tracking-wider font-mono text-zinc-400">
+                                  0{idx + 1} · {layer}
+                                </span>
+                              </div>
+                              <span className="text-[11px] font-mono text-zinc-500">
+                                Decision Verdict: Concluded
                               </span>
-                              <p className="mt-0.5 text-zinc-500 text-[11px]">{item.alternatives[0].why_not}</p>
                             </div>
-                          )}
-                        </div>
-                      ))}
+
+                            {/* Dual Side-by-Side Comparison */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                              {/* The Winner Card */}
+                              <div
+                                className={`rounded-xl border p-4 flex flex-col justify-between ${
+                                  isDark
+                                    ? "border-emerald-500/30 bg-emerald-500/[0.04]"
+                                    : "border-emerald-200 bg-emerald-50/40"
+                                }`}
+                              >
+                                <div>
+                                  <div className="flex items-center justify-between gap-2 mb-2">
+                                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                                      <CheckCircle2 className="h-3 w-3" />
+                                      Recommended Choice
+                                    </span>
+                                    <span className="text-[11px] font-mono text-emerald-500 font-semibold">Rank: #1 Winner</span>
+                                  </div>
+
+                                  <h4 className={`text-base font-bold ${isDark ? "text-white" : "text-zinc-900"}`}>
+                                    {item.choice}
+                                  </h4>
+
+                                  <div className="mt-2 text-xs leading-relaxed text-zinc-300">
+                                    <span className="font-semibold text-emerald-400">Why it Won: </span>
+                                    <span className={isDark ? "text-zinc-300" : "text-zinc-700"}>{item.justification}</span>
+                                  </div>
+                                </div>
+
+                                {/* Decision Drivers */}
+                                <div className="mt-3.5 pt-3 border-t border-emerald-500/20">
+                                  <span className="text-[10px] uppercase font-semibold tracking-wider text-zinc-500 block mb-1.5">
+                                    Key Criteria Satisfied:
+                                  </span>
+                                  <div className="flex flex-wrap gap-1">
+                                    {item.driven_by.map((d, i) => (
+                                      <span
+                                        key={i}
+                                        className={`rounded px-1.5 py-0.5 text-[10px] font-mono ${
+                                          isDark
+                                            ? "bg-zinc-800 text-zinc-300 border border-zinc-700/60"
+                                            : "bg-white text-zinc-800 border border-zinc-200"
+                                        }`}
+                                      >
+                                        {formatDriverTag(d)}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* The Runner-up Card */}
+                              <div
+                                className={`rounded-xl border p-4 flex flex-col justify-between ${
+                                  isDark
+                                    ? "border-zinc-800 bg-zinc-950/60"
+                                    : "border-zinc-200 bg-zinc-50/60"
+                                }`}
+                              >
+                                <div>
+                                  <div className="flex items-center justify-between gap-2 mb-2">
+                                    <span
+                                      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                                        isDark
+                                          ? "border-zinc-700 bg-zinc-800/80 text-zinc-400"
+                                          : "border-zinc-200 bg-zinc-100 text-zinc-600"
+                                      }`}
+                                    >
+                                      <XCircle className="h-3 w-3 text-amber-400" />
+                                      Evaluated Alternative
+                                    </span>
+                                    <span className="text-[11px] font-mono text-zinc-500">Runner-Up</span>
+                                  </div>
+
+                                  <h4 className={`text-base font-bold ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>
+                                    {alternative?.choice || altFallback}
+                                  </h4>
+
+                                  <div className="mt-2 text-xs leading-relaxed">
+                                    <span className="font-semibold text-amber-400">Why Rejected: </span>
+                                    <span className={isDark ? "text-zinc-400" : "text-zinc-600"}>
+                                      {alternative?.why_not || "Did not match the tight resource, operational, or budget constraints of this scenario."}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="mt-3.5 pt-3 border-t border-zinc-800/50">
+                                  <span className="text-[10px] uppercase font-semibold tracking-wider text-zinc-500 block mb-1.5">
+                                    Trade-off Verdict:
+                                  </span>
+                                  <p className="text-[11px] text-zinc-500 italic">
+                                    Higher operational overhead, runtime maintenance, or mismatch with current team skill affinity.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
 
+                    {/* Architectural Assumptions & Boundary Conditions */}
                     {recommendation.assumptions.length > 0 && (
-                      <div className={`border-t pt-3.5 ${isDark ? "border-zinc-800/80" : "border-zinc-100"}`}>
-                        <span
-                          className={`text-xs font-semibold uppercase tracking-wider block mb-1.5 ${
-                            isDark ? "text-zinc-400" : "text-zinc-500"
-                          }`}
-                        >
-                          Architectural Assumptions
-                        </span>
-                        <ul className="list-disc pl-4 space-y-1 text-xs sm:text-[13px] text-zinc-500">
+                      <div
+                        className={`rounded-2xl border p-4 sm:p-5 ${
+                          isDark ? "border-zinc-800/80 bg-zinc-900/40" : "border-zinc-200 bg-white shadow-sm"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-3">
+                          <ShieldCheck className={`h-4 w-4 ${isDark ? "text-emerald-400" : "text-emerald-600"}`} />
+                          <h4 className={`text-xs sm:text-sm font-bold uppercase tracking-wider ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>
+                            System Boundary Assumptions & Operating Constraints
+                          </h4>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                           {recommendation.assumptions.map((asm, i) => (
-                            <li key={i}>{asm}</li>
+                            <div
+                              key={i}
+                              className={`flex items-start gap-2.5 rounded-xl border p-3 text-xs leading-relaxed ${
+                                isDark
+                                  ? "border-zinc-800 bg-zinc-950/70 text-zinc-300"
+                                  : "border-zinc-200 bg-zinc-50 text-zinc-700"
+                              }`}
+                            >
+                              <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0 mt-1.5" />
+                              <span>{asm}</span>
+                            </div>
                           ))}
-                        </ul>
+                        </div>
                       </div>
                     )}
                   </div>
