@@ -16,5 +16,8 @@ model Architecture {
   maxCost           Int
   scenario          Json
   recommendation    Json
+  clientId          String   @default("anonymous")
   createdAt         DateTime @default(now())
+
+  @@index([clientId])
 }
