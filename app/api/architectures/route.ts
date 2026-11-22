@@ -56,3 +56,22 @@ export async function GET() {
     );
   }
 }
+
+// 3. DELETE: Remove a saved architecture from PostgreSQL
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    if (!id) {
+      return NextResponse.json({ error: "Missing architecture id" }, { status: 400 });
+    }
+    await prisma.architecture.delete({ where: { id } });
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (error) {
+    console.error("Failed to delete architecture:", error);
+    return NextResponse.json(
+      { error: "Failed to delete architecture from database" },
+      { status: 500 }
+    );
+  }
+}

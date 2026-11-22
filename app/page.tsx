@@ -30,7 +30,22 @@ import {
   Moon,
   ChevronRight,
   Sliders,
+  Trash2,
+  X,
+  Clock,
 } from "lucide-react";
+
+interface SavedArchitectureItem {
+  id: string;
+  name: string;
+  domain: string;
+  architectureStyle: string;
+  minCost: number;
+  maxCost: number;
+  scenario: InputScenario;
+  recommendation: OutputRecommendation;
+  createdAt: string;
+}
 
 const DEMO_PRESETS = PUBLIC_PRESETS.filter((p) => p.id === "P1" || p.id === "P4");
 
@@ -233,6 +248,36 @@ export default function StackSenseApp() {
 
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
 
+  // Database persistence state (Neon PostgreSQL)
+  const [savedArchitectures, setSavedArchitectures] = useState<SavedArchitectureItem[]>([]);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isSaved, setIsSaved] = useState<boolean>(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(false);
+
+  // Fetch saved architectures from Neon PostgreSQL
+  const fetchSavedArchitectures = async () => {
+    setIsLoadingHistory(true);
+    try {
+      const res = await fetch("/api/architectures");
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          setSavedArchitectures(json.data);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load saved architectures:", err);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  // Load saved architectures on mount
+  useEffect(() => {
+    fetchSavedArchitectures();
+  }, []);
+
   // Toggle between dark and light mode
   const toggleTheme = () => {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
@@ -247,6 +292,7 @@ export default function StackSenseApp() {
   // Runs the decision engine on the current scenario parameters to generate the architecture
   const handleSynthesize = () => {
     setIsGenerating(true);
+    setIsSaved(false);
     setTimeout(() => {
       try {
         const result = generateRecommendation(scenario);
@@ -260,12 +306,75 @@ export default function StackSenseApp() {
     }, 180);
   };
 
+  // Saves the active architecture recommendation to Neon PostgreSQL
+  const handleSaveToDb = async () => {
+    if (!recommendation) return;
+    setIsSaving(true);
+    try {
+      const payload = {
+        name: scenario.project.name || "Untitled Architecture",
+        domain: scenario.project.type || "general",
+        architectureStyle: recommendation.architecture_style || "monolith",
+        minCost: recommendation.estimated_monthly_cost_usd?.min ?? 0,
+        maxCost: recommendation.estimated_monthly_cost_usd?.max ?? 0,
+        scenario,
+        recommendation,
+      };
+
+      const res = await fetch("/api/architectures", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        setIsSaved(true);
+        await fetchSavedArchitectures();
+      } else {
+        alert("Failed to save architecture. Please try again.");
+      }
+    } catch (err) {
+      console.error("Failed to save to database:", err);
+      alert("Error saving architecture to database.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Loads a saved architecture from Neon PostgreSQL into the workspace
+  const handleLoadSaved = (item: SavedArchitectureItem) => {
+    setScenario(item.scenario);
+    setRecommendation(item.recommendation);
+    setActiveTab("stack");
+    setIsSaved(true);
+    setIsHistoryOpen(false);
+  };
+
+  // Deletes a saved architecture from Neon PostgreSQL
+  const handleDeleteSaved = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to delete this saved architecture?")) return;
+    try {
+      const res = await fetch(`/api/architectures?id=${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setSavedArchitectures((prev) => prev.filter((a) => a.id !== id));
+      } else {
+        alert("Failed to delete architecture.");
+      }
+    } catch (err) {
+      console.error("Delete error:", err);
+    }
+  };
+
   // Resets the scenario form back to the clean blank defaults
   const handleReset = () => {
     setSelectedPresetId(null);
     setScenario(DEFAULT_BLANK_SCENARIO);
     setRecommendation(null);
     setActiveTab("stack");
+    setIsSaved(false);
     try {
       sessionStorage.removeItem("stacksense_session");
     } catch (e) {
@@ -441,6 +550,32 @@ export default function StackSenseApp() {
               >
                 <FileDown className="h-4 w-4" />
                 <span>Export</span>
+              </button>
+
+              {/* Saved Architectures Trigger */}
+              <button
+                onClick={() => {
+                  fetchSavedArchitectures();
+                  setIsHistoryOpen(true);
+                }}
+                title="View saved architectures from Neon database"
+                className={`flex h-9 items-center gap-1.5 rounded-lg border px-3.5 text-xs sm:text-sm font-medium transition-colors ${
+                  isDark
+                    ? "border-zinc-800 bg-zinc-900/60 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-800 hover:text-white"
+                    : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-950 shadow-sm"
+                }`}
+              >
+                <Clock className="h-4 w-4 text-zinc-400" />
+                <span>Saved</span>
+                {savedArchitectures.length > 0 && (
+                  <span
+                    className={`ml-0.5 rounded-full px-1.5 py-0.2 text-[11px] font-mono font-semibold ${
+                      isDark ? "bg-zinc-800 text-zinc-300" : "bg-zinc-100 text-zinc-700"
+                    }`}
+                  >
+                    {savedArchitectures.length}
+                  </span>
+                )}
               </button>
             </div>
 
@@ -1017,6 +1152,37 @@ export default function StackSenseApp() {
                   <span className={`text-xs font-semibold uppercase tracking-wider ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>
                     Architecture Synthesis
                   </span>
+
+                  {/* Save to Neon PostgreSQL Button */}
+                  <button
+                    onClick={handleSaveToDb}
+                    disabled={isSaving}
+                    title="Save this architecture to database"
+                    className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
+                      isSaved
+                        ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-500"
+                        : isDark
+                          ? "border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700 hover:text-white"
+                          : "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 shadow-sm"
+                    }`}
+                  >
+                    {isSaving ? (
+                      <>
+                        <RotateCcw className="h-3.5 w-3.5 animate-spin" />
+                        <span>Saving...</span>
+                      </>
+                    ) : isSaved ? (
+                      <>
+                        <Check className="h-3.5 w-3.5 text-emerald-500" />
+                        <span>Saved</span>
+                      </>
+                    ) : (
+                      <>
+                        <Cloud className="h-3.5 w-3.5" />
+                        <span>Save Architecture</span>
+                      </>
+                    )}
+                  </button>
                 </div>
 
                 <div
@@ -1443,6 +1609,170 @@ export default function StackSenseApp() {
 
         </div>
       </main>
+
+      {/* Saved Architectures Modal */}
+      {isHistoryOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
+          <div
+            className={`w-full max-w-2xl rounded-2xl border shadow-2xl overflow-hidden transition-all ${
+              isDark ? "bg-[#111113] border-zinc-800 text-zinc-100" : "bg-white border-zinc-200 text-zinc-900"
+            }`}
+          >
+            {/* Modal Header */}
+            <div
+              className={`flex items-center justify-between border-b px-6 py-4 ${
+                isDark ? "border-zinc-800/80 bg-zinc-900/50" : "border-zinc-100 bg-zinc-50/50"
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <div
+                  className={`flex h-8 w-8 items-center justify-center rounded-lg border ${
+                    isDark ? "border-zinc-800 bg-zinc-900 text-zinc-300" : "border-zinc-200 bg-white text-zinc-700 shadow-sm"
+                  }`}
+                >
+                  <Clock className="h-4 w-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm sm:text-base font-semibold">Saved Architectures</h3>
+                    <span
+                      className={`rounded px-1.5 py-0.5 text-[10px] font-mono font-medium ${
+                        isDark ? "bg-zinc-800 text-zinc-400" : "bg-zinc-100 text-zinc-600"
+                      }`}
+                    >
+                      {savedArchitectures.length} saved
+                    </span>
+                  </div>
+                  <p className={`text-xs ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>
+                    Saved architecture recommendations in PostgreSQL database
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsHistoryOpen(false)}
+                className={`flex h-8 w-8 items-center justify-center rounded-lg border transition-colors ${
+                  isDark
+                    ? "border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                    : "border-zinc-200 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
+                }`}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Modal Body - Strictly only saved items from database */}
+            <div className="max-h-[60vh] overflow-y-auto p-6 space-y-3">
+              {isLoadingHistory ? (
+                <div className="flex flex-col items-center justify-center py-12 text-zinc-400">
+                  <RotateCcw className="h-6 w-6 animate-spin mb-2" />
+                  <span className="text-sm">Loading saved architectures...</span>
+                </div>
+              ) : savedArchitectures.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div
+                    className={`flex h-12 w-12 items-center justify-center rounded-xl border mb-3 ${
+                      isDark ? "border-zinc-800 bg-zinc-900 text-zinc-500" : "border-zinc-200 bg-zinc-100 text-zinc-400"
+                    }`}
+                  >
+                    <Clock className="h-6 w-6" />
+                  </div>
+                  <h4 className={`text-sm font-semibold ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>
+                    No saved architectures found
+                  </h4>
+                  <p className={`mt-1 text-xs max-w-xs ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>
+                    Generate an architecture recommendation and click &quot;Save Architecture&quot; to store it here.
+                  </p>
+                </div>
+              ) : (
+                savedArchitectures.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border transition-all ${
+                      isDark
+                        ? "border-zinc-800/80 bg-zinc-900/40 hover:border-zinc-700 hover:bg-zinc-900/70"
+                        : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50/80 shadow-sm"
+                    }`}
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={`text-sm font-semibold ${isDark ? "text-white" : "text-zinc-900"}`}>
+                          {item.name}
+                        </span>
+                        <span
+                          className={`rounded-md border px-2 py-0.5 font-mono text-[11px] font-medium uppercase ${
+                            isDark
+                              ? "border-zinc-700 bg-zinc-800 text-zinc-300"
+                              : "border-zinc-200 bg-zinc-100 text-zinc-700"
+                          }`}
+                        >
+                          {item.architectureStyle.replace(/_/g, " ")}
+                        </span>
+                        <span
+                          className={`rounded px-1.5 py-0.5 text-[10px] uppercase font-medium ${
+                            isDark ? "bg-zinc-800 text-zinc-400" : "bg-zinc-100 text-zinc-600"
+                          }`}
+                        >
+                          {item.domain}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-3 text-xs text-zinc-500 font-mono">
+                        <span className="text-emerald-500 font-semibold">
+                          ${item.minCost} - ${item.maxCost}/mo
+                        </span>
+                        <span>•</span>
+                        <span>{new Date(item.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-end sm:self-auto">
+                      <button
+                        onClick={() => handleLoadSaved(item)}
+                        className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                          isDark
+                            ? "border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700 hover:text-white"
+                            : "border-zinc-300 bg-white text-zinc-800 hover:bg-zinc-100 shadow-sm"
+                        }`}
+                      >
+                        <span>Load</span>
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </button>
+
+                      <button
+                        onClick={(e) => handleDeleteSaved(item.id, e)}
+                        title="Delete architecture"
+                        className={`flex h-8 w-8 items-center justify-center rounded-lg border transition-colors ${
+                          isDark
+                            ? "border-zinc-800 text-zinc-500 hover:border-red-900/50 hover:bg-red-950/30 hover:text-red-400"
+                            : "border-zinc-200 text-zinc-400 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                        }`}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div
+              className={`flex items-center justify-between border-t px-6 py-3 text-xs ${
+                isDark ? "border-zinc-800/80 bg-zinc-900/30 text-zinc-400" : "border-zinc-100 bg-zinc-50/50 text-zinc-500"
+              }`}
+            >
+              <span>Showing database records from Neon PostgreSQL</span>
+              <button
+                onClick={() => setIsHistoryOpen(false)}
+                className={`font-medium hover:underline ${isDark ? "text-zinc-300" : "text-zinc-700"}`}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
